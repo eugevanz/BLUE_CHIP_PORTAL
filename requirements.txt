@@ -1,0 +1,7 @@
+dash
+supabase~=2.8.1
+matplotlib
+uvicorn
+numpy
+sqlalchemy
+psycopg2-binary
