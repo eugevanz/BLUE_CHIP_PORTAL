@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from utils import engine, Account, DividendOrPayout, account_fig, continents_list, custom_colours, \
     fig_layout, dates_list, payouts_fig, format_time, investment_fig, investment_list, goals_fig, goals_list, \
-    transact_fig
+    transact_fig, transact_df
 
 dash.register_page(__name__, path_template='/add-payout/<profile_id>/')
 
@@ -64,7 +64,8 @@ def layout(profile_id: str):
                             )
                         ], className='uk-margin'),
 
-                        Button('Save', id='add-pay-btn', className='uk-button uk-button-primary uk-margin')
+                        Button('Save', id='add-pay-btn',
+                               className='uk-button uk-button-primary uk-margin uk-margin-large-bottom')
                     ], className='uk-card uk-card-body')
                 ]),
 
@@ -106,18 +107,23 @@ def layout(profile_id: str):
                                         html.Div([f'R {10000:,.2f}'])
                                     ], className='uk-flex uk-flex-column uk-height-medium', style={'fontSize': '8px'})
                                 ], className='uk-width-auto'),
-                                html.Div([dcc.Graph(figure=account_fig, style={'height': '300px'})])
+                                html.Div([
+                                    dcc.Graph(figure=account_fig, style={'height': '300px'}),
+                                    html.Hr(),
+                                    html.Div([
+                                        html.Div([
+                                            html.Div(className='uk-border-circle', style={
+                                                'backgroundColor': custom_colours[i], 'width': '8px', 'height': '8px'
+                                            }),
+                                            html.Div([continent], className='uk-margin-small-left uk-text-small')
+                                        ], className='uk-flex uk-flex-middle uk-margin-right') for i, continent in
+                                        enumerate(
+                                            continents_list)
+                                    ], className='uk-flex uk-flex-wrap')
+                                ])
                             ], **{'data-uk-grid': 'true'},
                                 className='uk-grid-divider uk-child-width-expand uk-grid-small')
-                        ], className='uk-card-body'),
-                        html.Div([
-                            html.Div([
-                                html.Div(className='uk-border-circle',
-                                         style={'backgroundColor': custom_colours[i], 'width': '8px', 'height': '8px'}),
-                                html.Div([continent], className='uk-margin-small-left uk-text-small')
-                            ], className='uk-flex uk-flex-middle uk-margin-right') for i, continent in enumerate(
-                                continents_list)
-                        ], className='uk-card-footer uk-flex uk-flex-wrap')
+                        ], className='uk-card-body')
                     ], className='uk-card uk-card-default')
                 ]),
 
@@ -133,18 +139,22 @@ def layout(profile_id: str):
                                         html.Div([f'R {10000:,.2f}'])
                                     ], className='uk-flex uk-flex-column uk-height-small', style={'fontSize': '8px'})
                                 ], className='uk-width-auto'),
-                                html.Div([dcc.Graph(figure=investment_fig, style={'height': '150px'})])
+                                html.Div([
+                                    dcc.Graph(figure=investment_fig, style={'height': '150px'}),
+                                    html.Hr(),
+                                    html.Div([
+                                        html.Div([
+                                            html.Div(className='uk-border-circle', style={
+                                                'backgroundColor': custom_colours[i], 'width': '8px', 'height': '8px'
+                                            }),
+                                            html.Div([item], className='uk-margin-small-left uk-text-small')
+                                        ], className='uk-flex uk-flex-middle uk-margin-right') for i, item in enumerate(
+                                            investment_list)
+                                    ], className='uk-flex uk-flex-wrap')
+                                ])
                             ], **{'data-uk-grid': 'true'},
                                 className='uk-grid-divider uk-child-width-expand uk-grid-small')
-                        ], className='uk-card-body'),
-                        html.Div([
-                            html.Div([
-                                html.Div(className='uk-border-circle',
-                                         style={'backgroundColor': custom_colours[i], 'width': '8px', 'height': '8px'}),
-                                html.Div([item], className='uk-margin-small-left uk-text-small')
-                            ], className='uk-flex uk-flex-middle uk-margin-right') for i, item in enumerate(
-                                investment_list)
-                        ], className='uk-card-footer uk-flex uk-flex-wrap')
+                        ], className='uk-card-body')
                     ], className='uk-card uk-card-default')
                 ]),
 
@@ -155,23 +165,22 @@ def layout(profile_id: str):
                             html.Div([
                                 html.Div([
                                     html.Div([
-                                        html.Div([f'R {100000:,.2f}']),
-                                        html.Div([f'R {500000:,.2f}'], className='uk-margin-auto-vertical'),
-                                        html.Div([f'R {10000:,.2f}'])
+                                        html.Div([
+                                            html.Div(className='uk-border-circle', style={
+                                                'backgroundColor': custom_colours[i], 'width': '8px', 'height': '8px'
+                                            }),
+                                            html.Div([
+                                                html.Div([item[0]], className='uk-text-uppercase'),
+                                                html.Div([f'R {item[1]:,.2f}'], className='uk-text-bolder')
+                                            ], className='uk-margin-small-left')
+                                        ], className='uk-flex uk-flex-middle uk-margin-right') for i, item in enumerate(
+                                            list(transact_df.itertuples(index=False, name=None)))
                                     ], className='uk-flex uk-flex-column uk-height-small', style={'fontSize': '8px'})
                                 ], className='uk-width-auto'),
                                 html.Div([dcc.Graph(figure=transact_fig, style={'height': '150px'})])
                             ], **{'data-uk-grid': 'true'},
                                 className='uk-grid-divider uk-child-width-expand uk-grid-small')
-                        ], className='uk-card-body'),
-                        html.Div([
-                            html.Div([
-                                html.Div(className='uk-border-circle',
-                                         style={'backgroundColor': custom_colours[i], 'width': '8px', 'height': '8px'}),
-                                html.Div([continent], className='uk-margin-small-left uk-text-small')
-                            ], className='uk-flex uk-flex-middle uk-margin-right') for i, continent in enumerate(
-                                continents_list)
-                        ], className='uk-card-footer uk-flex uk-flex-wrap')
+                        ], className='uk-card-body')
                     ], className='uk-card uk-card-default')
                 ]),
 
@@ -187,19 +196,23 @@ def layout(profile_id: str):
                                         html.Div([f'R {10000:,.2f}'])
                                     ], className='uk-flex uk-flex-column uk-height-small', style={'fontSize': '8px'})
                                 ], className='uk-width-auto'),
-                                html.Div([dcc.Graph(figure=goals_fig, style={'height': '150px'})])
+                                html.Div([
+                                    dcc.Graph(figure=goals_fig, style={'height': '150px'}),
+                                    html.Hr(),
+                                    html.Div([
+                                        html.Div([
+                                            html.Div(className='uk-border-circle',
+                                                     style={'backgroundColor': custom_colours[i], 'width': '8px',
+                                                            'height': '8px'}),
+                                            html.Div([item], className='uk-margin-small-left uk-text-small')
+                                        ], className='uk-flex uk-flex-middle uk-margin-right') for i, item in enumerate(
+                                            goals_list)
+                                    ], className='uk-flex uk-flex-wrap')
+                                ])
                             ], **{'data-uk-grid': 'true'},
                                 className='uk-grid-divider uk-child-width-expand uk-grid-small')
-                        ], className='uk-card-body'),
-                        html.Div([
-                            html.Div([
-                                html.Div(className='uk-border-circle',
-                                         style={'backgroundColor': custom_colours[i], 'width': '8px', 'height': '8px'}),
-                                html.Div([item], className='uk-margin-small-left uk-text-small')
-                            ], className='uk-flex uk-flex-middle uk-margin-right') for i, item in enumerate(
-                                goals_list)
-                        ], className='uk-card-footer uk-flex uk-flex-wrap')
-                    ], className='uk-card uk-card-secondary')
+                        ], className='uk-card-body')
+                    ], className='uk-card uk-card-default')
                 ])
 
             ], **{'data-uk-grid': 'masonry: pack'}, className='uk-child-width-1-2@m')

@@ -112,10 +112,10 @@ Base.metadata.create_all(engine, checkfirst=True)
 format_time = lambda x: x.strftime('%B %d, %Y')
 
 # Custom color palette
-custom_colours = ['#4b8ea9', '#899b98', '#fc8c3a', '#fbfcd7', '#ffcd06', '#9acf97', '#091235', '#7f7f7f', '#bcbd22',
-                  '#17becf', '#aec7e8', '#88A9C3']
-lighter_colours = ['#a5c8d9', '#c4d5d4', '#fda061', '#fdfef7', '#ffdb4d', '#b8e5b5', '#a16b8d', '#bfbfbf',
-                   '#d9d91e', '#6edee7', '#c5e1f6', '#ffd99a']
+custom_colours = ['#88A9C3', '#2b4257', '#fc8c3a', '#f7edb5', '#ffcd06', '#9acf97', '#4b8ea9', '#7f7f7f', '#bcbd22',
+                  '#17becf', '#aec7e8', '#899b98']
+lighter_colours = ['#A6BFD4', '#4F677A', '#FCAE6E', '#FBF6D8', '#FFDA4E', '#B3D7B5', '#71A4BA', '#A8A8A8', '#D3D538',
+                   '#63D8E4', '#D1E4F2', '#AAB7B4']
 fig_layout = {
     'xaxis': {'showticklabels': False, 'visible': False},
     'yaxis': {'showticklabels': False, 'visible': False},
@@ -135,7 +135,7 @@ account_fig = px.scatter(
 payouts_df = px.data.stocks().head(12)
 dates_list = payouts_df['date'].tolist()
 payouts_fig = px.line(payouts_df, x='date', y='GOOG', markers=True, line_shape='spline')
-payouts_fig.update_traces(line=dict(width=8), marker=dict(size=12), line_color=custom_colours[11])
+payouts_fig.update_traces(line=dict(width=8), marker=dict(size=12), line_color=custom_colours[0])
 
 investments_df = pd.DataFrame({
     'Investment': ['Investment A', 'Investment B', 'Investment C', 'Investment D', 'Investment E'],
@@ -168,7 +168,7 @@ transact_df = pd.DataFrame({
              'debit', 'credit', 'debit', 'credit', 'debit', 'credit', 'debit', 'credit', 'debit', 'credit']
 }).groupby('type')['amount'].sum().reset_index()
 transact_fig = px.pie(transact_df, values='amount', names='type', color='type', color_discrete_sequence=[
-    custom_colours[2], custom_colours[11]
+    custom_colours[0], custom_colours[1]
 ])
 
 
