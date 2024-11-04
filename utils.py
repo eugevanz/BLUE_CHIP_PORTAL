@@ -3,7 +3,9 @@ import uuid
 from datetime import datetime
 from os import environ
 
-from fasthtml.components import Div, Ul, Li, A, Span, Nav, Button, Hr, Br, P, Input, Img
+import pandas as pd
+import plotly.express as px
+from dash import dcc, html
 from sqlalchemy import create_engine, Column, String, Float, DateTime, ForeignKey, func, UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -109,6 +111,66 @@ Base.metadata.create_all(engine, checkfirst=True)
 
 format_time = lambda x: x.strftime('%B %d, %Y')
 
+# Custom color palette
+custom_colours = ['#4b8ea9', '#899b98', '#fc8c3a', '#fbfcd7', '#ffcd06', '#9acf97', '#091235', '#7f7f7f', '#bcbd22',
+                  '#17becf', '#aec7e8', '#88A9C3']
+lighter_colours = ['#a5c8d9', '#c4d5d4', '#fda061', '#fdfef7', '#ffdb4d', '#b8e5b5', '#a16b8d', '#bfbfbf',
+                   '#d9d91e', '#6edee7', '#c5e1f6', '#ffd99a']
+fig_layout = {
+    'xaxis': {'showticklabels': False, 'visible': False},
+    'yaxis': {'showticklabels': False, 'visible': False},
+    'paper_bgcolor': 'rgba(0, 0, 0, 0)',  # Use rgba for transparency
+    'plot_bgcolor': 'rgba(0, 0, 0, 0)',
+    'showlegend': False,
+    'margin': {'l': 0, 'r': 0, 't': 0, 'b': 0}
+}
+
+accounts_df = px.data.gapminder()
+continents_list = accounts_df['continent'].unique().tolist()
+account_fig = px.scatter(
+    accounts_df.query("year==2007"), x="gdpPercap", y="lifeExp", size="pop", color="continent", hover_name="country",
+    log_x=True, size_max=60, color_discrete_sequence=custom_colours
+)
+
+payouts_df = px.data.stocks().head(12)
+dates_list = payouts_df['date'].tolist()
+payouts_fig = px.line(payouts_df, x='date', y='GOOG', markers=True, line_shape='spline')
+payouts_fig.update_traces(line=dict(width=8), marker=dict(size=12), line_color=custom_colours[11])
+
+investments_df = pd.DataFrame({
+    'Investment': ['Investment A', 'Investment B', 'Investment C', 'Investment D', 'Investment E'],
+    'Returns': [12.5, 8.3, 15.2, 5.7, 9.1]  # hypothetical percentage returns
+})
+investment_list = investments_df['Investment'].tolist()
+investment_fig = px.bar(investments_df, x='Investment', y='Returns', color='Investment',
+                        color_discrete_sequence=custom_colours)
+
+goals_df = pd.DataFrame([
+    {'name': 'Goal 1', 'current': 30, 'target': 100},
+    {'name': 'Goal 2', 'current': 60, 'target': 80},
+    {'name': 'Goal 3', 'current': 50, 'target': 90},
+    {'name': 'Goal 4', 'current': 70, 'target': 120},
+    {'name': 'Goal 5', 'current': 20, 'target': 50}
+])
+goals_list = goals_df['name'].tolist()
+goals_fig = px.bar(goals_df, x='name', y=['current', 'target'], color_discrete_map={
+    'current': custom_colours, 'target': lighter_colours
+})
+
+transact_df = pd.DataFrame({
+    'amount': [100, 150, 200, 150, 300, 400, 100, 250, 300, 150,
+               100, 200, 100, 300, 400, 150, 250, 100, 200, 300,
+               250, 300, 350, 100, 200, 150, 400, 200, 300, 350,
+               200, 100, 250, 150, 300, 400, 300, 150, 100, 200],
+    'type': ['debit', 'credit', 'debit', 'credit', 'debit', 'credit', 'debit', 'credit', 'debit', 'credit',
+             'debit', 'credit', 'debit', 'credit', 'debit', 'credit', 'debit', 'credit', 'debit', 'credit',
+             'debit', 'credit', 'debit', 'credit', 'debit', 'credit', 'debit', 'credit', 'debit', 'credit',
+             'debit', 'credit', 'debit', 'credit', 'debit', 'credit', 'debit', 'credit', 'debit', 'credit']
+}).groupby('type')['amount'].sum().reset_index()
+transact_fig = px.pie(transact_df, values='amount', names='type', color='type', color_discrete_sequence=[
+    custom_colours[2], custom_colours[11]
+])
+
 
 def handle_api_response(_func_):
     def wrapper(*args, **kwargs):
@@ -120,7 +182,7 @@ def handle_api_response(_func_):
                 print(f'No data returned for function {_func_.__name__}')
         except Exception as e:
             print(f'Error fetching data from {_func_.__name__}: {e}')
-        return Div('no data')  # Return None in case of error or no data
+        return html.Div('no data')  # Return None in case of error or no data
 
     return wrapper
 
@@ -152,27 +214,27 @@ account_types = [
 
 
 def calc_input(label, icon, description):
-    return Div(
+    return html.Div(
         [
-            Div(
+            html.Div(
                 [
-                    Span(data_uk_icon=f'icon: {icon}', className='uk-form-icon'),
-                    Input(placeholder=label, type='text', className='uk-input'),
+                    html.Span(**{'data-uk-icon': f'icon: {icon}'}, className='uk-form-icon'),
+                    dcc.Input(placeholder=label, type='text', className='uk-input'),
                 ],
                 className='uk-inline'
             ),
-            Div(description, className='uk-text-small uk-padding-small uk-padding-remove-top'),
+            html.Div(description, className='uk-text-small uk-padding-small uk-padding-remove-top'),
         ],
         className='uk-margin'
     )
 
 
-nav_link = lambda href, title: Li(
-    A(title, href=href, data_uk_toggle=True)
+nav_link = lambda href, title: html.Li(
+    html.A(title, href=href, **{'data-uk-toggle': 'true'})
 )
 
-return_button = A(
-    Span(data_uk_icon='icon: chevron-left; ratio: 1.5', _='on click go back'),
+return_button = html.A(
+    html.Span(**{'data-uk-icon': 'icon: chevron-left; ratio: 1.5'}),
     href='#'
 )
 
@@ -205,11 +267,11 @@ calculator_group4 = [nav_link(href, title) for href, title in [
 
 
 def add_save_button(name: str, target: str):
-    return Div(
+    return html.Div(
         [
-            Button(
+            html.Button(
                 [
-                    Span(data_uk_icon='icon: plus', className='uk-margin-small-right'),
+                    html.Span(**{'data-uk-icon': 'icon: plus'}, className='uk-margin-small-right'),
                     name
                 ],
                 data_uk_toggle=f'target: #{target}-modal',
@@ -240,20 +302,21 @@ def calendar_view(year=None, month=None):
         return 'color: #CD5B45;' if day == datetime.now().day and month == datetime.now().month else None
 
     # Create the month header
-    month_header = Div(f'{calendar.month_name[month]} {year}', className='uk-text-small uk-margin')
+    month_header = html.Div(f'{calendar.month_name[month]} {year}', className='uk-text-small uk-margin')
 
     # Days of the week header
-    days_header = Div(
-        *[Div(Span(day, className='uk-text-muted uk-text-small')) for day in ['S', 'M', 'T', 'W', 'T', 'F', 'S']],
+    days_header = html.Div(
+        *[html.Div(html.Span(day, className='uk-text-muted uk-text-small')) for day in
+          ['S', 'M', 'T', 'W', 'T', 'F', 'S']],
         className='uk-grid-small uk-child-width-expand uk-text-center', **{'data-uk-grid': 'true'}
     )
 
     # Create week rows
     weeks = [
-        Div(
+        html.Div(
             *[
-                Div(
-                    A(
+                html.Div(
+                    html.A(
                         day,  # The current day from the list
                         className='uk-text-bolder',
                         style=highlight_date(day),  # Highlight the current day
@@ -261,7 +324,7 @@ def calendar_view(year=None, month=None):
                         # hx_target='#selected-date',  # Target element to update with the selected date
                         # hx_vals=json.dumps({'date': f'{year}-{month:02d}-{day:02d}'}),  # Pass the selected date
                         # hx_swap='innerHTML'  # Update the inner HTML of the target
-                    ) if day else Div('', className='uk-text-muted')  # Empty div for non-days
+                    ) if day else html.Div('', className='uk-text-muted')  # Empty div for non-days
                 ) for day in (days_list[i:i + 7] + [''] * (7 - len(days_list[i:i + 7])))  # Fill the week with days
             ],
             className='uk-grid-small uk-child-width-expand uk-text-center', **{'data-uk-grid': 'true'}
@@ -274,12 +337,12 @@ def calendar_view(year=None, month=None):
     # next_month = (datetime(year, month, 1) + timedelta(days=31)).replace(day=1)
 
     # Navigation controls
-    navigation = Div(
-        Nav(
-            Ul(
-                Li(
-                    A(
-                        Span(**{'data-uk-pagination-previous': 'true'}, className='uk-margin-small-right'),
+    navigation = html.Div(
+        html.Nav(
+            html.Ul(
+                html.Li(
+                    html.A(
+                        html.Span(**{'data-uk-pagination-previous': 'true'}, className='uk-margin-small-right'),
                         'Previous',
                         # hx_get='/calendar',  # URL to fetch the calendar
                         # hx_target='#calendar-container',  # ID of the container to update
@@ -287,10 +350,10 @@ def calendar_view(year=None, month=None):
                         # hx_vals=json.dumps({'year': previous_month.year, 'month': previous_month.month})
                     )
                 ),
-                Li(
-                    A(
+                html.Li(
+                    html.A(
                         'Next',
-                        Span(**{'data-uk-pagination-next': 'true'}, className='uk-margin-small-left'),
+                        html.Span(**{'data-uk-pagination-next': 'true'}, className='uk-margin-small-left'),
                         # hx_get='/calendar',  # URL to fetch the calendar
                         # hx_target='#calendar-container',  # ID of the container to update
                         # hx_swap='innerHTML',  # Replace inner HTML of the target
@@ -298,55 +361,55 @@ def calendar_view(year=None, month=None):
                     ),
                     className='uk-margin-auto-left'
                 ),
-                className='uk-pagination', data_uk_margin=True
+                className='uk-pagination', **{'data-uk-margin': 'true'}
             ),
             className='uk-margin-medium-top'
         )
     )
 
     # Placeholder for selected date
-    selected_date_display = Div(id='selected-date', className='uk-text-center uk-text-large uk-margin-top')
+    selected_date_display = html.Div(id='selected-date', className='uk-text-center uk-text-large uk-margin-top')
 
     # Return the full calendar view
-    return Div(
+    return html.Div(
         [month_header, days_header, *weeks, navigation, selected_date_display]
     )
 
 
 def sign_out_button():
-    return Li(
-        A([
-            Span(**{'data-uk-icon': 'icon: sign-out'}, className='uk-margin-small-right'),
+    return html.Li(
+        html.A([
+            html.Span(**{'data-uk-icon': 'icon: sign-out'}, className='uk-margin-small-right'),
             'Sign Out'
         ], className='uk-flex uk-flex-middle uk-text-danger uk-margin-top')
     )
 
 
 def precision_financial_tools():
-    return Li(
+    return html.Li(
         [
-            A(
+            html.A(
                 'Financial Tools',
-                Span(**{'data-uk-navbar-parent-icon': 'true'}),
+                html.Span(**{'data-uk-navbar-parent-icon': 'true'}),
                 aria_haspopup='true',
                 href='#',
                 role='button'
             )
         ],
-        Div(
+        html.Div(
             [
-                Ul(
+                html.Ul(
                     [
-                        Li('Potential Interest Calculators', className='uk-nav-header'),
+                        html.Li('Potential Interest Calculators', className='uk-nav-header'),
                         *calculator_group1,
-                        Li(className='uk-nav-divider'),
-                        Li('Return on Investment (ROI) Calculators', className='uk-nav-header'),
+                        html.Li(className='uk-nav-divider'),
+                        html.Li('Return on Investment (ROI) Calculators', className='uk-nav-header'),
                         *calculator_group2,
-                        Li(className='uk-nav-divider'),
-                        Li('Loan Amortisation Calculators', className='uk-nav-header'),
+                        html.Li(className='uk-nav-divider'),
+                        html.Li('Loan Amortisation Calculators', className='uk-nav-header'),
                         *calculator_group3,
-                        Li(className='uk-nav-divider'),
-                        Li('Other Relevant Financial Metrics Calculators', className='uk-nav-header'),
+                        html.Li(className='uk-nav-divider'),
+                        html.Li('Other Relevant Financial Metrics Calculators', className='uk-nav-header'),
                         *calculator_group4,
                     ],
                     className='uk-nav uk-navbar-dropdown-nav'
@@ -358,28 +421,28 @@ def precision_financial_tools():
 
 
 def nav(user=None, current_path='/home/'):
-    back_button = Img(
+    back_button = html.Img(
         src='https://oujdrprpkkwxeavzbaow.supabase.co/storage/v1/object/public/website_images/Blue%20Chip%20Invest'
             '%20Logo.001.png',
         width='60', height='60')
 
     if current_path not in ['/home/']:
-        back_button = A(
+        back_button = html.A(
             href='#',
             className='uk-icon-link',
             **{'data-uk-icon': 'icon: chevron-left; ratio: 3'},
             _='on click go back'
         )
 
-    return Div(
-        Nav(
-            Div(
-                Div(
-                    Div(
-                        Div(
+    return html.Div(
+        html.Nav(
+            html.Div(
+                html.Div(
+                    html.Div(
+                        html.Div(
                             [back_button,  # Wrap back_button in an array
-                             A(
-                                 Div(
+                             html.A(
+                                 html.Div(
                                      'BLUE CHIP INVESTMENTS',
                                      style='font-family: "Noto Sans", sans-serif; font-optical-sizing: auto; '
                                            'font-weight: 400; font-style: normal; line-height: 22px; color: #091235; '
@@ -391,21 +454,21 @@ def nav(user=None, current_path='/home/'):
                         ),
                         className='uk-navbar-left'
                     ),
-                    Div(
+                    html.Div(
                         [
-                            A(aria_haspopup='true', href='#', role='button',
-                              data_uk_navbar_toggle_icon=True,
-                              className='uk-navbar-toggle uk-navbar-toggle-animate uk-hidden@l uk-icon '
-                                        'uk-navbar-toggle-icon'),
-                            Button(
+                            html.A(aria_haspopup='true', href='#', role='button',
+                                   **{'data-uk-navbar-toggle-icon': 'true'},
+                                   className='uk-navbar-toggle uk-navbar-toggle-animate uk-hidden@l uk-icon '
+                                             'uk-navbar-toggle-icon'),
+                            html.Button(
                                 className='uk-icon uk-icon-image uk-border-circle',
                                 style='background-image: url('
                                       'https://oujdrprpkkwxeavzbaow.supabase.co/storage/v1/object/public'
                                       '/website_images/jurica-koletic-7YVZYZeITc8-unsplash_3_11zon.webp); height: '
                                       '44px; width: 44px;'
-                            ) if user else Div(
-                                A(data_uk_icon='user', className='uk-icon-button uk-icon',
-                                  style='background-color: #091235'),
+                            ) if user else html.Div(
+                                html.A(**{'data-uk-icon': 'icon: user'}, className='uk-icon-button uk-icon',
+                                       style='background-color: #091235'),
                                 className='uk-inline'
                             )
                         ],
@@ -422,19 +485,19 @@ def nav(user=None, current_path='/home/'):
 
 
 # def potential_interest_calculators():
-#     return Div(
+#     return html.Div(
 #         [
-#             Button(type='button', **{'data-uk-close': 'true'}, className='uk-modal-close-full uk-close-large'),
-#             Div(
+#             html.Button(type='button', **{'data-uk-close': 'true'}, className='uk-modal-close-full uk-close-large'),
+#             html.Div(
 #                 [
-#                     Div(
+#                     html.Div(
 #                         [
 #                             H3(
 #                                 'Potential Interest Calculators',
 #                                 style={'font-family': '"Playfair Display SC", serif', 'font-weight': '700', 'font-style': 'normal'},
 #                                 className='uk-text-uppercase uk-text-bolder'
 #                             ),
-#                             Div(
+#                             html.Div(
 #                                 '''These are tools designed to help individuals or businesses estimate the amount of
 #                                 interest they could earn or owe over time based on various financial scenarios. These
 #                                 calculators typically focus on interest accumulated from savings, loans, or investments and
@@ -444,9 +507,9 @@ def nav(user=None, current_path='/home/'):
 #                         ],
 #                         className='uk-text-center'
 #                     ),
-#                     Div(
+#                     html.Div(
 #                         [
-#                             Div(
+#                             html.Div(
 #                                 [
 #                                     H4('Simple Interest Calculator'),
 #                                     Form(
@@ -458,15 +521,15 @@ def nav(user=None, current_path='/home/'):
 #                                                            description='The annual interest rate, usually provided as a percentage (e.g., 5%)'),
 #                                                 calc_input(label='Time (T)', icon='clock',
 #                                                            description='The time period for which the interest is calculated, typically in years.'),
-#                                                 Div(
+#                                                 html.Div(
 #                                                     [
-#                                                         Div('Result', className='uk-text-bolder uk-text-small'),
-#                                                         Hr(),
-#                                                         Div(
-#                                                             Span('0.00', className='uk-text-bolder'),
+#                                                         html.Div('Result', className='uk-text-bolder uk-text-small'),
+#                                                         html.Hr(),
+#                                                         html.Div(
+#                                                             html.Span('0.00', className='uk-text-bolder'),
 #                                                             ' per year'
 #                                                         ),
-#                                                         Hr()
+#                                                         html.Hr()
 #                                                     ],
 #                                                     className='uk-margin'
 #                                                 )
@@ -478,7 +541,7 @@ def nav(user=None, current_path='/home/'):
 #                                 className='uk-card uk-card-default uk-card-body uk-light',
 #                                 style={'background-color': '#091235'}
 #                             ),
-#                             Div(
+#                             html.Div(
 #                                 [
 #                                     H4('Compound Interest Calculator'),
 #                                     Form(
@@ -492,30 +555,30 @@ def nav(user=None, current_path='/home/'):
 #                                                            description='The time period for which the interest is calculated, typically in years.'),
 #                                                 calc_input(label='Compounding Frequency (n)', icon='calendar',
 #                                                            description='The number of times the interest is compounded per year (e.g., annually, semi-annually, quarterly, monthly, daily).'),
-#                                                 Div('Common values for compounding frequency:',
+#                                                 html.Div('Common values for compounding frequency:',
 #                                                     className='uk-text-small uk-padding-small uk-padding-remove-top'),
-#                                                 Div(
-#                                                     Ul(
+#                                                 html.Div(
+#                                                     html.Ul(
 #                                                         [
-#                                                             Li('Annually (n = 1)'),
-#                                                             Li('Semi-Annually (n = 2)'),
-#                                                             Li('Quarterly (n = 4)'),
-#                                                             Li('Monthly (n = 12)'),
-#                                                             Li('Daily (n = 365)')
+#                                                             html.Li('Annually (n = 1)'),
+#                                                             html.Li('Semi-Annually (n = 2)'),
+#                                                             html.Li('Quarterly (n = 4)'),
+#                                                             html.Li('Monthly (n = 12)'),
+#                                                             html.Li('Daily (n = 365)')
 #                                                         ],
 #                                                         className='uk-list uk-list-collapse uk-list-disc'
 #                                                     ),
 #                                                     className='uk-text-small uk-padding-small uk-padding-remove-top'
 #                                                 ),
-#                                                 Div(
+#                                                 html.Div(
 #                                                     [
-#                                                         Div('Result', className='uk-text-bolder uk-text-small'),
-#                                                         Hr(),
-#                                                         Div(
-#                                                             Span('0.00', className='uk-text-bolder'),
+#                                                         html.Div('Result', className='uk-text-bolder uk-text-small'),
+#                                                         html.Hr(),
+#                                                         html.Div(
+#                                                             html.Span('0.00', className='uk-text-bolder'),
 #                                                             ' per year'
 #                                                         ),
-#                                                         Hr()
+#                                                         html.Hr()
 #                                                     ],
 #                                                     className='uk-margin'
 #                                                 )
@@ -527,7 +590,7 @@ def nav(user=None, current_path='/home/'):
 #                                 className='uk-card uk-card-default uk-card-body uk-light',
 #                                 style={'background-color': '#091235'}
 #                             ),
-#                             Div(
+#                             html.Div(
 #                                 [
 #                                     H4('Savings Interest Calculator'),
 #                                     Form(
@@ -543,30 +606,30 @@ def nav(user=None, current_path='/home/'):
 #                                                            description='The duration for which the savings will accumulate interest, typically measured in years.'),
 #                                                 calc_input(label='Compounding Frequency (n)', icon='calendar',
 #                                                            description='The number of times the interest is compounded per year (e.g., annually, semi-annually, quarterly, monthly, daily).'),
-#                                                 Div('Common values for compounding frequency:',
+#                                                 html.Div('Common values for compounding frequency:',
 #                                                     className='uk-text-small uk-padding-small uk-padding-remove-top'),
-#                                                 Div(
-#                                                     Ul(
+#                                                 html.Div(
+#                                                     html.Ul(
 #                                                         [
-#                                                             Li('Annually (n = 1)'),
-#                                                             Li('Semi-Annually (n = 2)'),
-#                                                             Li('Quarterly (n = 4)'),
-#                                                             Li('Monthly (n = 12)'),
-#                                                             Li('Daily (n = 365)')
+#                                                             html.Li('Annually (n = 1)'),
+#                                                             html.Li('Semi-Annually (n = 2)'),
+#                                                             html.Li('Quarterly (n = 4)'),
+#                                                             html.Li('Monthly (n = 12)'),
+#                                                             html.Li('Daily (n = 365)')
 #                                                         ],
 #                                                         className='uk-list uk-list-collapse uk-list-disc'
 #                                                     ),
 #                                                     className='uk-text-small uk-padding-small uk-padding-remove-top'
 #                                                 ),
-#                                                 Div(
+#                                                 html.Div(
 #                                                     [
-#                                                         Div('Result', className='uk-text-bolder uk-text-small'),
-#                                                         Hr(),
-#                                                         Div(
-#                                                             Span('0.00', className='uk-text-bolder'),
+#                                                         html.Div('Result', className='uk-text-bolder uk-text-small'),
+#                                                         html.Hr(),
+#                                                         html.Div(
+#                                                             html.Span('0.00', className='uk-text-bolder'),
 #                                                             ' per year'
 #                                                         ),
-#                                                         Hr()
+#                                                         html.Hr()
 #                                                     ],
 #                                                     className='uk-margin'
 #                                                 )
@@ -593,11 +656,11 @@ def nav(user=None, current_path='/home/'):
 #     )
 
 def footer():
-    return Div(
-        Div(
-            Hr(),
-            Div(
-                Div(
+    return html.Div(
+        html.Div(
+            html.Hr(),
+            html.Div(
+                html.Div(
                     'BLUE CHIP INVESTMENTS',
                     style={'font-family': 'Noto Sans, sans-serif', 'font-optical-sizing': 'auto',
                            'font-weight': '400', 'font-style': 'normal'},
@@ -605,24 +668,24 @@ def footer():
                     # _get='/home/',
                     # hx_target='#page'
                 ),
-                Div('Building Your Legacy with Trusted Growth', className='uk-text-small'),
+                html.Div('Building Your Legacy with Trusted Growth', className='uk-text-small'),
                 className='uk-card uk-card-body'
             ),
-            Div(
-                Div(
-                    Div(
-                        Div(
+            html.Div(
+                html.Div(
+                    html.Div(
+                        html.Div(
                             'Our Services',
                             className='uk-text-bolder uk-text-large uk-margin-small-bottom',
                             style={'color': '#88A9C3'}
                         ),
-                        Ul(
+                        html.Ul(
                             [
-                                Li(A('Financial Planning', href='#')),
-                                Li(A('Investment Management', href='#')),
-                                Li(A('Retirement Planning', href='#')),
-                                Li(A('Investment Analysis', href='#')),
-                                Li(A('Insurance', href='#'))
+                                html.Li(html.A('Financial Planning', href='#')),
+                                html.Li(html.A('Investment Management', href='#')),
+                                html.Li(html.A('Retirement Planning', href='#')),
+                                html.Li(html.A('Investment Analysis', href='#')),
+                                html.Li(html.A('Insurance', href='#'))
                             ],
                             className='uk-list uk-text-small'
                         ),
@@ -630,20 +693,20 @@ def footer():
                     ),
                     className='uk-width-auto'
                 ),
-                Div(
-                    Div(
-                        Div(
+                html.Div(
+                    html.Div(
+                        html.Div(
                             'Explore',
                             className='uk-text-bolder uk-text-large uk-margin-small-bottom',
                             style={'color': '#88A9C3'}
                         ),
-                        Ul(
+                        html.Ul(
                             [
-                                Li(A('About', href='#')),
-                                Li(A('Services', href='#')),
-                                Li(A('Careers', href='#')),
-                                Li(A("FAQ's", href='#')),
-                                Li(A('Partner', href='#'))
+                                html.Li(html.A('About', href='#')),
+                                html.Li(html.A('Services', href='#')),
+                                html.Li(html.A('Careers', href='#')),
+                                html.Li(html.A("FAQ's", href='#')),
+                                html.Li(html.A('Partner', href='#'))
                             ],
                             className='uk-list uk-text-small'
                         ),
@@ -651,19 +714,19 @@ def footer():
                     ),
                     className='uk-width-auto'
                 ),
-                Div(
-                    Div(
-                        Div(
+                html.Div(
+                    html.Div(
+                        html.Div(
                             "Let's Talk",
                             className='uk-text-bolder uk-text-large uk-margin-small-bottom',
                             style={'color': '#88A9C3'}
                         ),
-                        P(
+                        html.P(
                             'We\'re Here to Help You Grow Your Wealth, Plan Your Future, and Achieve Your Financial '
                             'Goals',
                             className='uk-text-small uk-light'
                         ),
-                        Button(
+                        html.Button(
                             'Start',
                             className='uk-button uk-light uk-text-bolder',
                             style={'background-color': '#88A9C3', 'color': '#091235'},
@@ -675,55 +738,56 @@ def footer():
                 **{'data-uk-grid': 'true'},
                 className='uk-child-width-1-2 uk-child-width-1-3@l'
             ),
-            Div(
-                Div(
-                    Div(
-                        Div(
+            html.Div(
+                html.Div(
+                    html.Div(
+                        html.Div(
                             **{'data-uk-icon': 'icon: location; ratio: 1.8'},
                             className='uk-icon',
                             style={'color': '#88A9C3'}
                         ),
-                        Div('Location', className='uk-text-large uk-text-bolder uk-light'),
-                        Div('Unit 17, No.30 Surprise Road, Pinetown, 3610', className='uk-text-small uk-light'),
+                        html.Div('Location', className='uk-text-large uk-text-bolder uk-light'),
+                        html.Div('Unit 17, No.30 Surprise Road, Pinetown, 3610', className='uk-text-small uk-light'),
                         className='uk-card uk-card-body'
                     )
                 ),
-                Div(
-                    Div(
-                        Div(
+                html.Div(
+                    html.Div(
+                        html.Div(
                             **{'data-uk-icon': 'icon: receiver; ratio: 1.8'},
                             className='uk-icon'
                         ),
-                        Div('Phone', className='uk-text-large uk-text-bolder uk-light'),
-                        Div('0860 258 2447', className='uk-text-small uk-light'),
+                        html.Div('Phone', className='uk-text-large uk-text-bolder uk-light'),
+                        html.Div('0860 258 2447', className='uk-text-small uk-light'),
                         className='uk-card uk-card-body'
                     )
                 ),
-                Div(
-                    Div(
-                        Div(
+                html.Div(
+                    html.Div(
+                        html.Div(
                             **{'data-uk-icon': 'icon: mail; ratio: 1.8'},
                             className='uk-icon'
                         ),
-                        Div('Email', className='uk-text-large uk-text-bolder'),
-                        Div('info@', Br(), 'bluechipinvest.co.za', className='uk-text-small'),
+                        html.Div('Email', className='uk-text-large uk-text-bolder'),
+                        html.Div('info@', html.Br(), 'bluechipinvest.co.za', className='uk-text-small'),
                         className='uk-card uk-card-body'
                     )
                 ),
-                Div(
-                    Div(
-                        Div(
+                html.Div(
+                    html.Div(
+                        html.Div(
                             **{'data-uk-icon': 'icon: social; ratio: 1.8'},
                             className='uk-icon'
                         ),
-                        Div('Social', className='uk-text-large uk-text-bolder', style={'margin-bottom': '4px'}),
-                        Div(
-                            Div(
+                        html.Div('Social', className='uk-text-large uk-text-bolder', style={'margin-bottom': '4px'}),
+                        html.Div(
+                            html.Div(
                                 [
-                                    Span(**{'data-uk-icon': 'icon: facebook'}, className='uk-icon-button uk-icon'),
-                                    Span(**{'data-uk-icon': 'icon: linkedin'}, className='uk-icon-button uk-icon'),
-                                    Span(**{'data-uk-icon': 'icon: instagram'}, className='uk-icon-button uk-icon'),
-                                    Span(**{'data-uk-icon': 'icon: x'}, className='uk-icon-button uk-icon')
+                                    html.Span(**{'data-uk-icon': 'icon: facebook'}, className='uk-icon-button uk-icon'),
+                                    html.Span(**{'data-uk-icon': 'icon: linkedin'}, className='uk-icon-button uk-icon'),
+                                    html.Span(**{'data-uk-icon': 'icon: instagram'},
+                                              className='uk-icon-button uk-icon'),
+                                    html.Span(**{'data-uk-icon': 'icon: x'}, className='uk-icon-button uk-icon')
                                 ],
                                 **{'data-uk-grid': 'true'},
                                 className='uk-grid-small uk-child-width-auto'
@@ -740,3 +804,15 @@ def footer():
         ),
         className='uk-section uk-section-large uk-light', style={'background-color': '#091235'}
     )
+
+
+def editor_graph_layout():
+    df = px.data.gapminder()
+    fig = px.scatter(
+        df.query("year==2007"), x="gdpPercap", y="lifeExp", size="pop", color="continent", hover_name="country",
+        log_x=True, size_max=60
+    )
+
+    return html.Div([
+        dcc.Graph(figure=fig)
+    ])

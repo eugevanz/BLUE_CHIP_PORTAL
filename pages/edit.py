@@ -40,6 +40,23 @@ def create_table_header(columns, sticky=True):
     })
 
 
+def create_delete_item(type_id: str, item_id: str):
+    return html.Td([
+        html.A(**{'data-uk-icon': 'icon: trash; ratio: 0.8'}, className='uk-icon-button uk-text-danger'),
+        html.Div([
+            html.Div('Are you sure?', className='uk-card-body uk-text-center'),
+            html.Div([
+                html.Div([
+                    html.Button('Cancel', className='uk-button uk-button-primary uk-drop-close'),
+                    html.Button('Delete', className='uk-button uk-button-danger',
+                                id={'type': type_id, 'index': item_id})
+                ], **{'data-uk-margin': 'true'})
+            ], className='uk-card-footer')
+        ], className='uk-card uk-card-default',
+            **{'data-uk-dropdown': 'mode: click; pos: top-left; shift: false; flip: false'})
+    ])
+
+
 def create_table_wrapper(header, body, empty_message="No data available"):
     """Utility function to create consistent table wrappers"""
     return html.Div([
@@ -69,13 +86,9 @@ def accounts_table(id: str):
     header = create_table_header(['', 'Balance', 'Account Type', 'Account', 'Last Update'])
     body = html.Tbody([
         html.Tr([
-            html.Td(html.A(
-                **{'data-uk-icon': 'icon: trash; ratio: 0.8'},
-                className='uk-icon-button uk-text-danger',
-                id={'type': 'delete_account', 'index': str(account.id)}
-            )),
+            create_delete_item(type_id='delete_account', item_id=str(account.id)),
             html.Td(f'R {account.balance:,.2f}', className='uk-text-right'),
-            html.Td(html.Span(account.account_type, className='uk-badge uk-background-primary')),
+            html.Td(account.account_type, className='uk-text-bolder uk-text-uppercase'),
             html.Td(account.account_number),
             html.Td(format_time(account.updated_at), className='uk-text-muted')
         ], className='uk-animation-fade') for account in accounts
@@ -95,15 +108,11 @@ def investments_table(accs: [Account]):
     header = create_table_header(['', 'Investment', 'Amount', 'Purchase Price', 'Current Price', 'Start Date'])
     body = html.Tbody([
         html.Tr([
-            html.Td(html.A(
-                **{'data-uk-icon': 'icon: trash; ratio: 0.8'},
-                className='uk-icon-button uk-text-danger',
-                id={'type': 'delete_investment', 'index': str(investment.id)}
-            )),
-            html.Td(investment.investment_type),
+            create_delete_item(type_id='delete_investment', item_id=str(investment.id)),
+            html.Td(html.Span(investment.investment_type, className='uk-text-bolder uk-text-uppercase')),
             html.Td(investment.quantity),
-            html.Td(investment.purchase_price),
-            html.Td(investment.current_price),
+            html.Td(f'R {investment.purchase_price:,.2f}'),
+            html.Td(f'R {investment.current_price:,.2f}'),
             html.Td(format_time(investment.purchase_date))
         ], className='uk-animation-fade') for investment in investments
     ]) if accs and investments else None
@@ -123,15 +132,11 @@ def transactions_table(id: str):
     header = create_table_header(['', 'Description', 'Transaction Type', 'Amount', 'Last Updated'])
     body = html.Tbody([
         html.Tr([
-            html.Td(html.A(
-                **{'data-uk-icon': 'icon: trash; ratio: 0.8'},
-                className='uk-icon-button uk-text-danger',
-                id={'type': 'delete_transaction', 'index': str(transaction.id)}
-            )),
+            create_delete_item(type_id='delete_transaction', item_id=str(transaction.id)),
             html.Td(transaction.description),
             html.Td(transaction.type,
                     className=f'uk-text-{"success" if transaction.type == "debit" else "danger"}'),
-            html.Td(f'R {transaction.amount:.2f}'),
+            html.Td(f'R {transaction.amount:,.2f}'),
             html.Td(format_time(transaction.created_at))
         ], className='uk-animation-fade') for transaction in transactions
     ]) if accounts and transactions else None
@@ -150,14 +155,10 @@ def client_goals_table(id: str):
     header = create_table_header(['', 'Current Savings', 'Target Amount', 'Goal', 'Target Date'])
     body = html.Tbody([
         html.Tr([
-            html.Td(html.A(
-                **{'data-uk-icon': 'icon: trash; ratio: 0.8'},
-                className='uk-icon-button uk-text-danger',
-                id={'type': 'delete_goal', 'index': str(goal.id)}
-            )),
-            html.Td(f'R {goal.current_savings:.2f}'),
-            html.Td(f'R {goal.target_amount:.2f}'),
-            html.Td(goal.goal_type),
+            create_delete_item(type_id='delete_goal', item_id=str(goal.id)),
+            html.Td(f'R {goal.current_savings:,.2f}'),
+            html.Td(f'R {goal.target_amount:,.2f}'),
+            html.Td(html.Span(goal.goal_type, className='uk-text-bolder uk-text-uppercase')),
             html.Td(format_time(goal.target_date))
         ], className='uk-animation-fade') for goal in client_goals
     ]) if client_goals else None
@@ -177,19 +178,9 @@ def payouts_table(id: str):
     header = create_table_header(['', 'Payment Date', 'Amount'])
     body = html.Tbody([
         html.Tr([
-            html.Td([
-                html.A(
-                    **{'data-uk-icon': 'icon: trash; ratio: 0.8'},
-                    className='uk-icon-button uk-text-danger',
-                    # id={'type': 'delete_payout', 'index': str(payout.id)}
-                ),
-                html.Div([
-                    'Are you sure you want to delete this item?'
-                ], className='uk-card uk-card-body uk-card-default',
-                    **{'data-uk-dropdown': 'mode: click; pos: top-left; shift: false; flip: false'})
-            ]),
+            create_delete_item(type_id='delete_payout', item_id=str(payout.id)),
             html.Td(format_time(payout.payment_date)),
-            html.Td(f'R {payout.amount:.2f}')
+            html.Td(f'R {payout.amount:,.2f}')
         ], className='uk-animation-fade') for payout in dividends_and_payouts
     ]) if dividends_and_payouts else None
 

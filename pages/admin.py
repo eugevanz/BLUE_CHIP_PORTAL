@@ -148,7 +148,7 @@ def portfolio_value_card():
                 className='uk-text-small uk-margin-remove-top')
         ], className='uk-card-body'),
         Div([
-            dcc.Graph(id='portfolio-value-graph', figure=fig)
+            dcc.Graph(figure=fig)
         ], className='uk-card-footer')
     ], className='uk-card uk-card-default uk-light', style={'backgroundColor': '#172031'})
 

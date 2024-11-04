@@ -16,8 +16,8 @@ def layout():
             Div(
                 style={
                     'backgroundImage': 'url('
-                                        'https://oujdrprpkkwxeavzbaow.supabase.co/storage/v1/object/public'
-                                        '/website_images/marten-bjork-6dW3xyQvcYE-unsplash_6_11zon.webp)',
+                                       'https://oujdrprpkkwxeavzbaow.supabase.co/storage/v1/object/public'
+                                       '/website_images/marten-bjork-6dW3xyQvcYE-unsplash_6_11zon.webp)',
                     'filter': 'grayscale(90%)'
                 },
                 **{'data-uk-height-viewport': 'true'},
@@ -121,7 +121,7 @@ def request_otp(n_clicks, login_email):
 
 
 @callback(
-    Output('url', 'href',allow_duplicate=True),
+    Output('url', 'href', allow_duplicate=True),
     Output('access_token', 'data'),
     Input('verify-code-btn', 'n_clicks'),
     State('login-email', 'value'),
@@ -146,7 +146,6 @@ def verify_otp(n_clicks, login_email, sent_code):
                 if user_email in admin_users:
                     with Session(engine) as session:
                         clients = session.query(Profile).all()
-                        print(clients)
                     return dash.page_registry['pages.admin']['path'], access_token
                 else:
                     return dash.page_registry['pages.client_portal']['path'], access_token
