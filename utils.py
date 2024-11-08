@@ -3,8 +3,11 @@ import uuid
 from datetime import datetime
 from os import environ
 
+import dash
+import numpy as np
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 from dash import dcc, html
 from sqlalchemy import create_engine, Column, String, Float, DateTime, ForeignKey, func, UUID
 from sqlalchemy.ext.declarative import declarative_base
@@ -109,7 +112,7 @@ class Transaction(Base):
 
 Base.metadata.create_all(engine, checkfirst=True)
 
-format_time = lambda x: x.strftime('%B %d, %Y')
+format_time = lambda x: x.strftime('%b %d, %Y')
 
 # Custom color palette
 custom_colours = ['#88A9C3', '#2b4257', '#fc8c3a', '#f7edb5', '#ffcd06', '#9acf97', '#4b8ea9', '#7f7f7f', '#bcbd22',
@@ -131,11 +134,13 @@ account_fig = px.scatter(
     accounts_df.query("year==2007"), x="gdpPercap", y="lifeExp", size="pop", color="continent", hover_name="country",
     log_x=True, size_max=60, color_discrete_sequence=custom_colours
 )
+account_fig.update_layout(**fig_layout)
 
 payouts_df = px.data.stocks().head(12)
 dates_list = payouts_df['date'].tolist()
 payouts_fig = px.line(payouts_df, x='date', y='GOOG', markers=True, line_shape='spline')
 payouts_fig.update_traces(line=dict(width=8), marker=dict(size=12), line_color=custom_colours[0])
+payouts_fig.update_layout(**fig_layout)
 
 investments_df = pd.DataFrame({
     'Investment': ['Investment A', 'Investment B', 'Investment C', 'Investment D', 'Investment E'],
@@ -144,6 +149,7 @@ investments_df = pd.DataFrame({
 investment_list = investments_df['Investment'].tolist()
 investment_fig = px.bar(investments_df, x='Investment', y='Returns', color='Investment',
                         color_discrete_sequence=custom_colours)
+investment_fig.update_layout(**fig_layout)
 
 goals_df = pd.DataFrame([
     {'name': 'Goal 1', 'current': 30, 'target': 100},
@@ -156,6 +162,7 @@ goals_list = goals_df['name'].tolist()
 goals_fig = px.bar(goals_df, x='name', y=['current', 'target'], color_discrete_map={
     'current': custom_colours, 'target': lighter_colours
 })
+goals_fig.update_layout(**fig_layout)
 
 transact_df = pd.DataFrame({
     'amount': [100, 150, 200, 150, 300, 400, 100, 250, 300, 150,
@@ -170,6 +177,50 @@ transact_df = pd.DataFrame({
 transact_fig = px.pie(transact_df, values='amount', names='type', color='type', color_discrete_sequence=[
     custom_colours[0], custom_colours[1]
 ])
+transact_fig.update_layout(**fig_layout)
+
+# Set a seed for reproducibility
+np.random.seed(42)
+
+# Generate a custom date range for the data
+date_range = pd.date_range(start="2024-01-01", periods=100, freq="B")  # Business days
+
+# Generate synthetic stock data
+initial_open = 150
+price_changes = np.random.normal(0, 2, size=len(date_range))  # Random daily changes
+open_prices = initial_open + np.cumsum(price_changes)  # Cumulative sum for continuity
+
+# Simulate high, low, and close prices
+high_prices = open_prices + np.random.uniform(0, 5, size=len(date_range))
+low_prices = open_prices - np.random.uniform(0, 5, size=len(date_range))
+close_prices = open_prices + np.random.uniform(-2, 2, size=len(date_range))
+
+market_df = pd.DataFrame({
+    "Date": date_range,
+    "Open": open_prices,
+    "High": high_prices,
+    "Low": low_prices,
+    "Close": close_prices
+}).head(30)
+market_fig = go.Figure(data=[
+    go.Candlestick(
+        x=market_df['Date'], open=market_df['Open'], high=market_df['High'], low=market_df['Low'],
+        close=market_df['Close'], increasing_line_color=custom_colours[0], decreasing_line_color=custom_colours[1]
+    )
+])
+market_fig.update_layout(**fig_layout)
+
+
+def indicator_fig(value: float = 400576.67):
+    fig = go.Figure(go.Indicator(
+        mode='number',
+        value=value,
+        number={'prefix': "R ", 'font': {'color': custom_colours[0]}},
+        domain={'x': [0, 1], 'y': [0, 1]})
+    )
+    fig.update_layout(**fig_layout)
+
+    return fig
 
 
 def handle_api_response(_func_):
@@ -264,6 +315,43 @@ calculator_group4 = [nav_link(href, title) for href, title in [
     ("#other-relevant-financial-metrics-calculators", "Payback Period Calculator"),
     ("#other-relevant-financial-metrics-calculators", "Profit Margin Calculator")
 ]]
+
+
+def table_item_decorator(funct):
+    def wrapper(*args, **kwargs):
+        try:
+            return funct(*args, **kwargs)
+        except Exception as e:
+            print(f"Error generating component: {e}")
+            return html.Div("An error occurred.", className='uk-alert uk-alert-danger')
+
+    return wrapper
+
+
+def create_table_header(columns, sticky=True):
+    """Utility function to create consistent table headers"""
+    return html.Thead([
+        html.Tr([
+            html.Th(col, className=f'uk-table-{"shrink" if i == 0 else "expand"}')
+            for i, col in enumerate(columns)
+        ])
+    ], **{'data-uk-sticky': 'end: !.uk-height-max-large' if sticky else None}, className='uk-background-secondary')
+
+
+def create_table_wrapper(header, body, empty_message="No data available"):
+    """Utility function to create consistent table wrappers"""
+    return html.Div([
+        html.Div([
+            html.Table([
+                header,
+                body if body else html.Tbody(html.Tr(html.Td(
+                    empty_message,
+                    colSpan=len(header.children[0].children),
+                    className='uk-text-muted uk-text-center'
+                )))
+            ], className='uk-table uk-table-middle uk-table-divider uk-table-hover')
+        ], className='uk-overflow-auto uk-height-max-large')
+    ])
 
 
 def add_save_button(name: str, target: str):
@@ -420,240 +508,529 @@ def precision_financial_tools():
     )
 
 
-def nav(user=None, current_path='/home/'):
-    back_button = html.Img(
-        src='https://oujdrprpkkwxeavzbaow.supabase.co/storage/v1/object/public/website_images/Blue%20Chip%20Invest'
-            '%20Logo.001.png',
-        width='60', height='60')
+def find_path_by_name(pathname):
+    # Split the pathname into segments and remove empty strings
+    segments = [segment for segment in pathname.split('/') if segment]
 
-    if current_path not in ['/home/']:
-        back_button = html.A(
-            href='#',
-            className='uk-icon-link',
-            **{'data-uk-icon': 'icon: chevron-left; ratio: 3'},
-            _='on click go back'
-        )
+    # Prepend 'edit' if any of the specified segments are present
+    if any(segment in segments for segment in
+           ['add-account', 'add-client-goal', 'add-investment', 'add-payout', 'add-transaction']):
+        segments.insert(0, 'edit')
 
-    return html.Div(
-        html.Nav(
-            html.Div(
-                html.Div(
+    # Always insert 'admin' at the beginning
+    segments.insert(0, 'admin') if 'admin' not in segments else None
+
+    breadcrumbs = []
+    profile_id = None
+
+    # Determine the profile ID from the segments
+    for segment in segments:
+        # Check if the segment is a profile ID
+        if not any(f'/{segment}/' in page['path'] for page in dash.page_registry.values()):
+            profile_id = segment
+            break  # Exit the loop once the profile ID is found
+
+    # Build breadcrumbs
+    for segment in segments:
+        for page in dash.page_registry.values():
+            # If the segment matches the page path, add to breadcrumbs
+            if f'/{segment}/' in page['path']:
+                breadcrumbs.append((page['name'], f'/{segment}/'))
+
+                # If the segment is one of the add operations, include the profile_id
+                if segment in ['add-account', 'add-client-goal', 'add-investment', 'add-payout',
+                               'add-transaction', 'edit'] and profile_id:
+                    # Update the last breadcrumb to include profile_id
+                    breadcrumbs[-1] = (page['name'], f'/{segment}/{profile_id}')
+
+    return breadcrumbs
+
+
+def navbar(pathname: str):
+    return html.Div([
+        html.Nav([
+            html.Div([
+                html.Div([
+                    html.Div([
+                        html.Div([
+                            html.Img(
+                                src='https://oujdrprpkkwxeavzbaow.supabase.co/storage/v1/object/public/website_images'
+                                    '/Blue%20Chip%20Invest%20Logo.001.png',
+                                width='60', height='60'),
+                            html.Div(['BLUE CHIP INVESTMENTS'],
+                                     style={'font-family': '"Noto Sans", sans-serif', 'font-optical-sizing': 'auto',
+                                            'font-weight': '400', 'font-style': 'normal', 'line-height': '22px',
+                                            'color': '#091235', 'width': '164px'})
+                        ], className='uk-navbar-item uk-logo'),
+                        html.Nav([
+                            html.Ul([
+                                html.Li([html.A(name, href=path)]) for name, path in find_path_by_name(pathname)
+                            ], className='uk-breadcrumb')
+                        ]),
+                    ], className='uk-navbar-left uk-flex-bottom')
+                ], **{'data-uk-navbar': 'true'})
+            ], className='uk-container')
+        ], className='uk-navbar-container')
+    ], **{'data-uk-sticky': 'sel-target: .uk-navbar-container; className-active: uk-navbar-sticky'})
+
+
+def dividend_performance(order: str = None):
+    return html.Div([
+        html.Div([
+            html.Div([
+                html.Div('Dividend/Payout performance', className='uk-text-small'),
+                html.H2('R8,167,514.57',
+                        className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate'),
+                html.Div(['Compared to last month ', html.Span('+24.17%', className='uk-text-success')],
+                         className='uk-text-small uk-margin-remove-top')
+            ], className='uk-card-header'),
+            html.Div([
+                html.Div([
+                    html.Div([
+                        html.Div([
+                            html.Div([f'R {100000:,.2f}']),
+                            html.Div([f'R {500000:,.2f}'], className='uk-margin-auto-vertical'),
+                            html.Div([f'R {10000:,.2f}'])
+                        ], className='uk-flex uk-flex-column uk-height-medium',
+                            style={'fontSize': '8px'})
+                    ], className='uk-width-auto'),
+                    html.Div([
+                        dcc.Graph(figure=payouts_fig, style={'height': '300px'}, config={'displayModeBar': False}),
+                        html.Hr(),
+                        html.Div([
+                            html.Div([format_time(datetime.strptime(item, '%Y-%m-%d'))]) for item in
+                            [dates_list[0], dates_list[len(dates_list) // 2], dates_list[-1]]
+                        ], className='uk-flex uk-flex-between', style={'fontSize': '8px'})
+                    ])
+                ], **{'data-uk-grid': 'true'},
+                    className='uk-grid-divider uk-child-width-expand uk-grid-small')
+            ], className='uk-card-body')
+        ], className='uk-card uk-card-default')
+    ], className=order)
+
+
+def account_performance(order: str = None):
+    return html.Div([
+        html.Div([
+            html.Div([
+                html.Div('Accounts performance', className='uk-text-small'),
+                html.H2('R8,167,514.57',
+                        className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate'),
+                html.Div(['Compared to last month ', html.Span('+24.17%', className='uk-text-success')],
+                         className='uk-text-small uk-margin-remove-top')
+            ], className='uk-card-header'),
+            html.Div([
+                html.Div([
+                    html.Div([
+                        html.Div([
+                            html.Div([f'R {100000:,.2f}']),
+                            html.Div([f'R {500000:,.2f}'], className='uk-margin-auto-vertical'),
+                            html.Div([f'R {10000:,.2f}'])
+                        ], className='uk-flex uk-flex-column uk-height-medium',
+                            style={'fontSize': '8px'})
+                    ], className='uk-width-auto'),
+                    html.Div([
+                        dcc.Graph(figure=account_fig, style={'height': '300px'}, config={'displayModeBar': False}),
+                        html.Hr(),
+                        html.Div([
+                            html.Div([
+                                html.Div(className='uk-border-circle', style={
+                                    'backgroundColor': custom_colours[i], 'width': '8px',
+                                    'height': '8px'
+                                }),
+                                html.Div([continent], className='uk-margin-small-left uk-text-small')
+                            ], className='uk-flex uk-flex-middle uk-margin-right') for i, continent in
+                            enumerate(continents_list)
+                        ], className='uk-flex uk-flex-wrap')
+                    ])
+                ], **{'data-uk-grid': 'true'},
+                    className='uk-grid-divider uk-child-width-expand uk-grid-small')
+            ], className='uk-card-body')
+        ], className='uk-card uk-card-default')
+    ], className=order)
+
+
+def investment_performance(order: str = None):
+    return html.Div([
+        html.Div([
+            html.Div([
+                html.Div('Investments performance', className='uk-text-small'),
+                html.H2('R8,167,514.57',
+                        className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate'),
+                html.Div(['Compared to last month ', html.Span('+24.17%', className='uk-text-success')],
+                         className='uk-text-small uk-margin-remove-top')
+            ], className='uk-card-header'),
+            html.Div([
+                html.Div([
+                    html.Div([
+                        html.Div([
+                            html.Div([f'R {100000:,.2f}']),
+                            html.Div([f'R {500000:,.2f}'], className='uk-margin-auto-vertical'),
+                            html.Div([f'R {10000:,.2f}'])
+                        ], className='uk-flex uk-flex-column uk-height-small',
+                            style={'fontSize': '8px'})
+                    ], className='uk-width-auto'),
+                    html.Div([
+                        dcc.Graph(figure=investment_fig, style={'height': '150px'}, config={'displayModeBar': False}),
+                        html.Hr(),
+                        html.Div([
+                            html.Div([
+                                html.Div(className='uk-border-circle', style={
+                                    'backgroundColor': custom_colours[i], 'width': '8px',
+                                    'height': '8px'
+                                }),
+                                html.Div([item], className='uk-margin-small-left uk-text-small')
+                            ], className='uk-flex uk-flex-middle uk-margin-right') for i, item in
+                            enumerate(
+                                investment_list)
+                        ], className='uk-flex uk-flex-wrap')
+                    ])
+                ], **{'data-uk-grid': 'true'},
+                    className='uk-grid-divider uk-child-width-expand uk-grid-small')
+            ], className='uk-card-body')
+        ], className='uk-card uk-card-default')
+    ], className=order)
+
+
+def client_goal_performance(order: str = None):
+    return html.Div([
+        html.Div([
+            html.Div([
+                html.Div('Client Goals performance', className='uk-text-small'),
+                html.H2('R8,167,514.57',
+                        className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate'),
+                html.Div(['Compared to last month ', html.Span('+24.17%', className='uk-text-success')],
+                         className='uk-text-small uk-margin-remove-top')
+            ], className='uk-card-header'),
+            html.Div([
+                html.Div([
+                    html.Div([
+                        html.Div([
+                            html.Div([f'R {100000:,.2f}']),
+                            html.Div([f'R {500000:,.2f}'], className='uk-margin-auto-vertical'),
+                            html.Div([f'R {10000:,.2f}'])
+                        ], className='uk-flex uk-flex-column uk-height-small',
+                            style={'fontSize': '8px'})
+                    ], className='uk-width-auto'),
+                    html.Div([
+                        dcc.Graph(figure=goals_fig, style={'height': '150px'}, config={'displayModeBar': False}),
+                        html.Hr(),
+                        html.Div([
+                            html.Div([
+                                html.Div(className='uk-border-circle',
+                                         style={'backgroundColor': custom_colours[i], 'width': '8px',
+                                                'height': '8px'}),
+                                html.Div([item], className='uk-margin-small-left uk-text-small')
+                            ], className='uk-flex uk-flex-middle uk-margin-right') for i, item in
+                            enumerate(
+                                goals_list)
+                        ], className='uk-flex uk-flex-wrap')
+                    ])
+                ], **{'data-uk-grid': 'true'},
+                    className='uk-grid-divider uk-child-width-expand uk-grid-small')
+            ], className='uk-card-body')
+        ], className='uk-card uk-card-default')
+    ], className=order)
+
+
+def transaction_performance(order: str = None):
+    return html.Div([
+        html.Div([
+            html.Div([
+                html.Div('Transactions performance', className='uk-text-small'),
+                html.H2('R8,167,514.57',
+                        className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate'),
+                html.Div(['Compared to last month ', html.Span('+24.17%', className='uk-text-success')],
+                         className='uk-text-small uk-margin-remove-top')
+            ], className='uk-card-header'),
+            html.Div([
+                html.Div([
+                    html.Div([
+                        html.Div([
+                            html.Div([
+                                html.Div(className='uk-border-circle', style={
+                                    'backgroundColor': custom_colours[i], 'width': '8px',
+                                    'height': '8px'
+                                }),
+                                html.Div([
+                                    html.Div([item[0]], className='uk-text-uppercase'),
+                                    html.Div([f'R {item[1]:,.2f}'], className='uk-text-bolder')
+                                ], className='uk-margin-small-left')
+                            ], className='uk-flex uk-flex-middle uk-margin-right') for i, item in
+                            enumerate(list(transact_df.itertuples(index=False, name=None)))
+                        ], className='uk-flex uk-flex-column uk-height-small',
+                            style={'fontSize': '8px'})
+                    ], className='uk-width-auto'),
                     html.Div(
-                        html.Div(
-                            [back_button,  # Wrap back_button in an array
-                             html.A(
-                                 html.Div(
-                                     'BLUE CHIP INVESTMENTS',
-                                     style='font-family: "Noto Sans", sans-serif; font-optical-sizing: auto; '
-                                           'font-weight: 400; font-style: normal; line-height: 22px; color: #091235; '
-                                           'width: 164px;',
-                                     className='uk-link-text'
-                                 )
-                             )],
-                            className='uk-navbar-item uk-logo'
-                        ),
-                        className='uk-navbar-left'
-                    ),
-                    html.Div(
-                        [
-                            html.A(aria_haspopup='true', href='#', role='button',
-                                   **{'data-uk-navbar-toggle-icon': 'true'},
-                                   className='uk-navbar-toggle uk-navbar-toggle-animate uk-hidden@l uk-icon '
-                                             'uk-navbar-toggle-icon'),
-                            html.Button(
-                                className='uk-icon uk-icon-image uk-border-circle',
-                                style='background-image: url('
-                                      'https://oujdrprpkkwxeavzbaow.supabase.co/storage/v1/object/public'
-                                      '/website_images/jurica-koletic-7YVZYZeITc8-unsplash_3_11zon.webp); height: '
-                                      '44px; width: 44px;'
-                            ) if user else html.Div(
-                                html.A(**{'data-uk-icon': 'icon: user'}, className='uk-icon-button uk-icon',
-                                       style='background-color: #091235'),
-                                className='uk-inline'
-                            )
-                        ],
-                        className='uk-navbar-right'
-                    ),
-                    data_uk_navbar='mode: click;', className='uk-navbar'
-                ),
-                className='uk-container'
-            ),
-            className='uk-navbar-container'
-        ),
-        data_uk_sticky='sel-target: .uk-navbar-container; className-active: uk-navbar-sticky;'
-    )
+                        [dcc.Graph(figure=transact_fig, style={'height': '150px'}, config={'displayModeBar': False})])
+                ], **{'data-uk-grid': 'true'},
+                    className='uk-grid-divider uk-child-width-expand uk-grid-small')
+            ], className='uk-card-body')
+        ], className='uk-card uk-card-default')
+    ], className=order)
 
 
-# def potential_interest_calculators():
-#     return html.Div(
-#         [
-#             html.Button(type='button', **{'data-uk-close': 'true'}, className='uk-modal-close-full uk-close-large'),
-#             html.Div(
-#                 [
-#                     html.Div(
-#                         [
-#                             H3(
-#                                 'Potential Interest Calculators',
-#                                 style={'font-family': '"Playfair Display SC", serif', 'font-weight': '700', 'font-style': 'normal'},
-#                                 className='uk-text-uppercase uk-text-bolder'
-#                             ),
-#                             html.Div(
-#                                 '''These are tools designed to help individuals or businesses estimate the amount of
-#                                 interest they could earn or owe over time based on various financial scenarios. These
-#                                 calculators typically focus on interest accumulated from savings, loans, or investments and
-#                                 can be tailored for specific financial goals.''',
-#                                 className='uk-text-small uk-width-2-3@s'
-#                             )
-#                         ],
-#                         className='uk-text-center'
-#                     ),
-#                     html.Div(
-#                         [
-#                             html.Div(
-#                                 [
-#                                     H4('Simple Interest Calculator'),
-#                                     Form(
-#                                         Fieldset(
-#                                             [
-#                                                 calc_input(label='Principal (P)', icon='bag',
-#                                                            description='The initial amount of money that is being invested or loaned.'),
-#                                                 calc_input(label='Interest Rate (R)', icon='arrow-up-right',
-#                                                            description='The annual interest rate, usually provided as a percentage (e.g., 5%)'),
-#                                                 calc_input(label='Time (T)', icon='clock',
-#                                                            description='The time period for which the interest is calculated, typically in years.'),
-#                                                 html.Div(
-#                                                     [
-#                                                         html.Div('Result', className='uk-text-bolder uk-text-small'),
-#                                                         html.Hr(),
-#                                                         html.Div(
-#                                                             html.Span('0.00', className='uk-text-bolder'),
-#                                                             ' per year'
-#                                                         ),
-#                                                         html.Hr()
-#                                                     ],
-#                                                     className='uk-margin'
-#                                                 )
-#                                             ],
-#                                             className='uk-fieldset'
-#                                         )
-#                                     )
-#                                 ],
-#                                 className='uk-card uk-card-default uk-card-body uk-light',
-#                                 style={'background-color': '#091235'}
-#                             ),
-#                             html.Div(
-#                                 [
-#                                     H4('Compound Interest Calculator'),
-#                                     Form(
-#                                         Fieldset(
-#                                             [
-#                                                 calc_input(label='Principal (P)', icon='bag',
-#                                                            description='The initial amount of money that is being invested or loaned.'),
-#                                                 calc_input(label='Interest Rate (R)', icon='arrow-up-right',
-#                                                            description='The annual interest rate, usually provided as a percentage (e.g., 5%)'),
-#                                                 calc_input(label='Time (T)', icon='clock',
-#                                                            description='The time period for which the interest is calculated, typically in years.'),
-#                                                 calc_input(label='Compounding Frequency (n)', icon='calendar',
-#                                                            description='The number of times the interest is compounded per year (e.g., annually, semi-annually, quarterly, monthly, daily).'),
-#                                                 html.Div('Common values for compounding frequency:',
-#                                                     className='uk-text-small uk-padding-small uk-padding-remove-top'),
-#                                                 html.Div(
-#                                                     html.Ul(
-#                                                         [
-#                                                             html.Li('Annually (n = 1)'),
-#                                                             html.Li('Semi-Annually (n = 2)'),
-#                                                             html.Li('Quarterly (n = 4)'),
-#                                                             html.Li('Monthly (n = 12)'),
-#                                                             html.Li('Daily (n = 365)')
-#                                                         ],
-#                                                         className='uk-list uk-list-collapse uk-list-disc'
-#                                                     ),
-#                                                     className='uk-text-small uk-padding-small uk-padding-remove-top'
-#                                                 ),
-#                                                 html.Div(
-#                                                     [
-#                                                         html.Div('Result', className='uk-text-bolder uk-text-small'),
-#                                                         html.Hr(),
-#                                                         html.Div(
-#                                                             html.Span('0.00', className='uk-text-bolder'),
-#                                                             ' per year'
-#                                                         ),
-#                                                         html.Hr()
-#                                                     ],
-#                                                     className='uk-margin'
-#                                                 )
-#                                             ],
-#                                             className='uk-fieldset'
-#                                         )
-#                                     )
-#                                 ],
-#                                 className='uk-card uk-card-default uk-card-body uk-light',
-#                                 style={'background-color': '#091235'}
-#                             ),
-#                             html.Div(
-#                                 [
-#                                     H4('Savings Interest Calculator'),
-#                                     Form(
-#                                         Fieldset(
-#                                             [
-#                                                 calc_input(label='Principal (P)', icon='bag',
-#                                                            description='The initial amount of money that is being invested or loaned.'),
-#                                                 calc_input(label='Monthly Contributions (C)', icon='mail',
-#                                                            description='The amount of money added to the account each month, if applicable.'),
-#                                                 calc_input(label='Annual Interest Rate (R)', icon='mail',
-#                                                            description='The interest rate provided by the savings account, usually expressed as a percentage.'),
-#                                                 calc_input(label='Time (T)', icon='clock',
-#                                                            description='The duration for which the savings will accumulate interest, typically measured in years.'),
-#                                                 calc_input(label='Compounding Frequency (n)', icon='calendar',
-#                                                            description='The number of times the interest is compounded per year (e.g., annually, semi-annually, quarterly, monthly, daily).'),
-#                                                 html.Div('Common values for compounding frequency:',
-#                                                     className='uk-text-small uk-padding-small uk-padding-remove-top'),
-#                                                 html.Div(
-#                                                     html.Ul(
-#                                                         [
-#                                                             html.Li('Annually (n = 1)'),
-#                                                             html.Li('Semi-Annually (n = 2)'),
-#                                                             html.Li('Quarterly (n = 4)'),
-#                                                             html.Li('Monthly (n = 12)'),
-#                                                             html.Li('Daily (n = 365)')
-#                                                         ],
-#                                                         className='uk-list uk-list-collapse uk-list-disc'
-#                                                     ),
-#                                                     className='uk-text-small uk-padding-small uk-padding-remove-top'
-#                                                 ),
-#                                                 html.Div(
-#                                                     [
-#                                                         html.Div('Result', className='uk-text-bolder uk-text-small'),
-#                                                         html.Hr(),
-#                                                         html.Div(
-#                                                             html.Span('0.00', className='uk-text-bolder'),
-#                                                             ' per year'
-#                                                         ),
-#                                                         html.Hr()
-#                                                     ],
-#                                                     className='uk-margin'
-#                                                 )
-#                                             ],
-#                                             className='uk-fieldset'
-#                                         )
-#                                     )
-#                                 ],
-#                                 className='uk-card uk-card-default uk-card-body uk-light',
-#                                 style={'background-color': '#091235'}
-#                             )
-#                         ],
-#                         **{'data-uk-grid': 'masonry: pack'},
-#                         className='uk-child-width-1-2@m uk-margin-medium-top'
-#                     )
-#                 ],
-#                 className='uk-container'
-#             )
-#         ],
-#         className='uk-section uk-section-medium',
-#         id='potential-interest-calculators',
-#         **{'data-uk-modal': 'true'},
-#         className='uk-modal-full'
-#     )
+def market_performance():
+    return html.Div([
+        html.Div([
+            html.Div([
+                html.Div([
+                    html.Div([
+                        html.Div('Market performance', className='uk-text-small'),
+                        html.H2(f'R {8167514.57:,.2f}',
+                                className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate'),
+                        html.Div([
+                            'Compared to last month ', html.Span('+24.17%', className='uk-text-success')
+                        ], className='uk-text-small uk-margin-remove-top')
+                    ]),
+                    html.Select([
+                        html.Option([label], value=value) for label, value in [
+                            ('S&P 500', 'S&P 500'), ('NASDAQ', 'NASDAQ'), ('Dow Jones', 'Dow Jones'),
+                            ('FTSE 100', 'FTSE 100')
+                        ]
+                    ], className='uk-select uk-form-small uk-form-blank uk-width-small', id='instrument')
+                ], className='uk-flex uk-flex-between uk-flex-bottom')
+            ], className='uk-card-header'),
+            html.Div([
+                html.Div([
+                    html.Div([
+                        html.Div([
+                            html.Div([f'R {100000:,.2f}']),
+                            html.Div([f'R {500000:,.2f}'], className='uk-margin-auto-vertical'),
+                            html.Div([f'R {10000:,.2f}'])
+                        ], className='uk-flex uk-flex-column uk-height-medium', style={'fontSize': '8px'})
+                    ], className='uk-width-auto'),
+                    html.Div([
+                        dcc.Graph(figure=market_fig, style={'height': '300px'}, config={'displayModeBar': False}),
+                        html.Hr(),
+                        html.Div([
+                            html.Div([
+                                format_time(item)
+                            ]) for item in [
+                                market_df.iloc[0]['Date'],
+                                market_df.iloc[int(len(market_df) * 0.25)]['Date'],
+                                market_df.iloc[int(len(market_df) * 0.75)]['Date'],
+                                market_df.iloc[-1]['Date']
+                            ]
+                        ], className='uk-flex uk-flex-between', style={'fontSize': '8px'})
+                    ])
+                ], **{'data-uk-grid': 'true'},
+                    className='uk-grid-divider uk-child-width-expand uk-grid-small')
+            ], className='uk-card-body'),
+            html.Div([
+                html.Div([
+                    html.Div([
+                        html.Div('S&P 500', style={'fontSize': '11px'}),
+                        html.Div(f'R {4376.95:,.2f}',
+                                 className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom '
+                                           'uk-text-truncate'),
+                        html.Div([
+                            '0.73% ', html.Span(**{'data-uk-icon': 'triangle-up'}, className='uk-text-success')
+                        ], className='uk-text-small uk-margin-remove-top')
+                    ]),
+                    html.Div([
+                        html.Div('NASDAQ', style={'fontSize': '11px'}),
+                        html.Div(f'R {14628.02:,.2f}',
+                                 className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom '
+                                           'uk-text-truncate'),
+                        html.Div([
+                            '-1.46% ', html.Span(**{'data-uk-icon': 'triangle-down'}, className='uk-text-danger')
+                        ], className='uk-text-small uk-margin-remove-top')
+                    ]),
+                    html.Div([
+                        html.Div('Dow Jones', style={'fontSize': '11px'}),
+                        html.Div(f'R {34588.87:,.2f}',
+                                 className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom '
+                                           'uk-text-truncate'),
+                        html.Div([
+                            '0.52% ', html.Span(**{'data-uk-icon': 'triangle-up'}, className='uk-text-success')
+                        ], className='uk-text-small uk-margin-remove-top')
+                    ]),
+                    html.Div([
+                        html.Div('FTSE 100', style={'fontSize': '11px'}),
+                        html.Div(f'R {7044.03:,.2f}',
+                                 className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom '
+                                           'uk-text-truncate'),
+                        html.Div([
+                            '0.20% ', html.Span(**{'data-uk-icon': 'triangle-up'}, className='uk-text-success')
+                        ], className='uk-text-small uk-margin-remove-top')
+                    ])
+                ], className='uk-flex uk-flex-between')
+            ], className='uk-card-footer')
+        ], className='uk-card uk-card-default')
+    ], className='uk-width-3-4@m')
+
+    # def potential_interest_calculators():
+    #     return html.Div(
+    #         [
+    #             html.Button(type='button', **{'data-uk-close': 'true'}, className='uk-modal-close-full uk-close-large'),
+    #             html.Div(
+    #                 [
+    #                     html.Div(
+    #                         [
+    #                             H3(
+    #                                 'Potential Interest Calculators',
+    #                                 style={'font-family': '"Playfair Display SC", serif', 'font-weight': '700', 'font-style': 'normal'},
+    #                                 className='uk-text-uppercase uk-text-bolder'
+    #                             ),
+    #                             html.Div(
+    #                                 '''These are tools designed to help individuals or businesses estimate the amount of
+    #                                 interest they could earn or owe over time based on various financial scenarios. These
+    #                                 calculators typically focus on interest accumulated from savings, loans, or investments and
+    #                                 can be tailored for specific financial goals.''',
+    #                                 className='uk-text-small uk-width-2-3@s'
+    #                             )
+    #                         ],
+    #                         className='uk-text-center'
+    #                     ),
+    #                     html.Div(
+    #                         [
+    #                             html.Div(
+    #                                 [
+    #                                     H4('Simple Interest Calculator'),
+    #                                     Form(
+    #                                         Fieldset(
+    #                                             [
+    #                                                 calc_input(label='Principal (P)', icon='bag',
+    #                                                            description='The initial amount of money that is being invested or loaned.'),
+    #                                                 calc_input(label='Interest Rate (R)', icon='arrow-up-right',
+    #                                                            description='The annual interest rate, usually provided as a percentage (e.g., 5%)'),
+    #                                                 calc_input(label='Time (T)', icon='clock',
+    #                                                            description='The time period for which the interest is calculated, typically in years.'),
+    #                                                 html.Div(
+    #                                                     [
+    #                                                         html.Div('Result', className='uk-text-bolder uk-text-small'),
+    #                                                         html.Hr(),
+    #                                                         html.Div(
+    #                                                             html.Span('0.00', className='uk-text-bolder'),
+    #                                                             ' per year'
+    #                                                         ),
+    #                                                         html.Hr()
+    #                                                     ],
+    #                                                     className='uk-margin'
+    #                                                 )
+    #                                             ],
+    #                                             className='uk-fieldset'
+    #                                         )
+    #                                     )
+    #                                 ],
+    #                                 className='uk-card uk-card-default uk-card-body uk-light',
+    #                                 style={'background-color': '#091235'}
+    #                             ),
+    #                             html.Div(
+    #                                 [
+    #                                     H4('Compound Interest Calculator'),
+    #                                     Form(
+    #                                         Fieldset(
+    #                                             [
+    #                                                 calc_input(label='Principal (P)', icon='bag',
+    #                                                            description='The initial amount of money that is being invested or loaned.'),
+    #                                                 calc_input(label='Interest Rate (R)', icon='arrow-up-right',
+    #                                                            description='The annual interest rate, usually provided as a percentage (e.g., 5%)'),
+    #                                                 calc_input(label='Time (T)', icon='clock',
+    #                                                            description='The time period for which the interest is calculated, typically in years.'),
+    #                                                 calc_input(label='Compounding Frequency (n)', icon='calendar',
+    #                                                            description='The number of times the interest is compounded per year (e.g., annually, semi-annually, quarterly, monthly, daily).'),
+    #                                                 html.Div('Common values for compounding frequency:',
+    #                                                     className='uk-text-small uk-padding-small uk-padding-remove-top'),
+    #                                                 html.Div(
+    #                                                     html.Ul(
+    #                                                         [
+    #                                                             html.Li('Annually (n = 1)'),
+    #                                                             html.Li('Semi-Annually (n = 2)'),
+    #                                                             html.Li('Quarterly (n = 4)'),
+    #                                                             html.Li('Monthly (n = 12)'),
+    #                                                             html.Li('Daily (n = 365)')
+    #                                                         ],
+    #                                                         className='uk-list uk-list-collapse uk-list-disc'
+    #                                                     ),
+    #                                                     className='uk-text-small uk-padding-small uk-padding-remove-top'
+    #                                                 ),
+    #                                                 html.Div(
+    #                                                     [
+    #                                                         html.Div('Result', className='uk-text-bolder uk-text-small'),
+    #                                                         html.Hr(),
+    #                                                         html.Div(
+    #                                                             html.Span('0.00', className='uk-text-bolder'),
+    #                                                             ' per year'
+    #                                                         ),
+    #                                                         html.Hr()
+    #                                                     ],
+    #                                                     className='uk-margin'
+    #                                                 )
+    #                                             ],
+    #                                             className='uk-fieldset'
+    #                                         )
+    #                                     )
+    #                                 ],
+    #                                 className='uk-card uk-card-default uk-card-body uk-light',
+    #                                 style={'background-color': '#091235'}
+    #                             ),
+    #                             html.Div(
+    #                                 [
+    #                                     H4('Savings Interest Calculator'),
+    #                                     Form(
+    #                                         Fieldset(
+    #                                             [
+    #                                                 calc_input(label='Principal (P)', icon='bag',
+    #                                                            description='The initial amount of money that is being invested or loaned.'),
+    #                                                 calc_input(label='Monthly Contributions (C)', icon='mail',
+    #                                                            description='The amount of money added to the account each month, if applicable.'),
+    #                                                 calc_input(label='Annual Interest Rate (R)', icon='mail',
+    #                                                            description='The interest rate provided by the savings account, usually expressed as a percentage.'),
+    #                                                 calc_input(label='Time (T)', icon='clock',
+    #                                                            description='The duration for which the savings will accumulate interest, typically measured in years.'),
+    #                                                 calc_input(label='Compounding Frequency (n)', icon='calendar',
+    #                                                            description='The number of times the interest is compounded per year (e.g., annually, semi-annually, quarterly, monthly, daily).'),
+    #                                                 html.Div('Common values for compounding frequency:',
+    #                                                     className='uk-text-small uk-padding-small uk-padding-remove-top'),
+    #                                                 html.Div(
+    #                                                     html.Ul(
+    #                                                         [
+    #                                                             html.Li('Annually (n = 1)'),
+    #                                                             html.Li('Semi-Annually (n = 2)'),
+    #                                                             html.Li('Quarterly (n = 4)'),
+    #                                                             html.Li('Monthly (n = 12)'),
+    #                                                             html.Li('Daily (n = 365)')
+    #                                                         ],
+    #                                                         className='uk-list uk-list-collapse uk-list-disc'
+    #                                                     ),
+    #                                                     className='uk-text-small uk-padding-small uk-padding-remove-top'
+    #                                                 ),
+    #                                                 html.Div(
+    #                                                     [
+    #                                                         html.Div('Result', className='uk-text-bolder uk-text-small'),
+    #                                                         html.Hr(),
+    #                                                         html.Div(
+    #                                                             html.Span('0.00', className='uk-text-bolder'),
+    #                                                             ' per year'
+    #                                                         ),
+    #                                                         html.Hr()
+    #                                                     ],
+    #                                                     className='uk-margin'
+    #                                                 )
+    #                                             ],
+    #                                             className='uk-fieldset'
+    #                                         )
+    #                                     )
+    #                                 ],
+    #                                 className='uk-card uk-card-default uk-card-body uk-light',
+    #                                 style={'background-color': '#091235'}
+    #                             )
+    #                         ],
+    #                         **{'data-uk-grid': 'masonry: pack'},
+    #                         className='uk-child-width-1-2@m uk-margin-medium-top'
+    #                     )
+    #                 ],
+    #                 className='uk-container'
+    #             )
+    #         ],
+    #         className='uk-section uk-section-medium',
+    #         id='potential-interest-calculators',
+    #         **{'data-uk-modal': 'true'},
+    #         className='uk-modal-full'
+    #     )
+
 
 def footer():
     return html.Div(
@@ -747,7 +1124,8 @@ def footer():
                             style={'color': '#88A9C3'}
                         ),
                         html.Div('Location', className='uk-text-large uk-text-bolder uk-light'),
-                        html.Div('Unit 17, No.30 Surprise Road, Pinetown, 3610', className='uk-text-small uk-light'),
+                        html.Div('Unit 17, No.30 Surprise Road, Pinetown, 3610',
+                                 className='uk-text-small uk-light'),
                         className='uk-card uk-card-body'
                     )
                 ),
@@ -779,7 +1157,8 @@ def footer():
                             **{'data-uk-icon': 'icon: social; ratio: 1.8'},
                             className='uk-icon'
                         ),
-                        html.Div('Social', className='uk-text-large uk-text-bolder', style={'margin-bottom': '4px'}),
+                        html.Div('Social', className='uk-text-large uk-text-bolder',
+                                 style={'margin-bottom': '4px'}),
                         html.Div(
                             html.Div(
                                 [

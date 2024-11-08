@@ -21,6 +21,8 @@ app = Dash(
     use_pages=True
 )
 
+app.config.suppress_callback_exceptions = True
+
 app.layout = Div([
     dcc.Location(id='url'),
     dcc.Store(id='access_token', storage_type='session'),

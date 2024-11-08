@@ -1,117 +1,114 @@
 import dash
 import plotly.express as px
-from dash import dcc
-from dash.html import Ul, A, Span, Img, H3, Label, Button, H2, Hr, Nav, Div, Li, P, Table, Tbody, Tr, Td
+from dash import dcc, html, callback, Output, Input
 from sqlalchemy.orm import Session
 
-from utils import calendar_view, Profile, engine, sign_out_button
+from utils import calendar_view, Profile, engine, sign_out_button, navbar, create_table_wrapper, create_table_header, \
+    table_item_decorator, market_performance
 
-dash.register_page(__name__, path='/admin/')
+dash.register_page(__name__, path='/admin/', name='Admin')
 
 
 def menu_card():
-    return Div(
-        Ul([
-            Li('Menu', className='uk-nav-header', style={'color': 'white'}),
-            Li(A([
-                Span(**{'data-uk-icon': 'icon: home'}, className='uk-margin-small-right'), 'Dashboard'
+    return html.Div(
+        html.Ul([
+            html.Li('Menu', className='uk-nav-header', style={'color': 'white'}),
+            html.Li(html.A([
+                html.Span(**{'data-uk-icon': 'icon: home'}, className='uk-margin-small-right'), 'Dashboard'
             ], className='uk-flex uk-flex-middle')),
-            Li(A([
-                Span(**{'data-uk-icon': 'icon: credit-card'}, className='uk-margin-small-right'), 'Transactions'
+            html.Li(html.A([
+                html.Span(**{'data-uk-icon': 'icon: credit-card'}, className='uk-margin-small-right'), 'Transactions'
             ], className='uk-flex uk-flex-middle')),
-            Li(A([
-                Span(**{'data-uk-icon': 'icon: star'}, className='uk-margin-small-right'), 'My Goals'
+            html.Li(html.A([
+                html.Span(**{'data-uk-icon': 'icon: star'}, className='uk-margin-small-right'), 'My Goals'
             ], className='uk-flex uk-flex-middle')),
-            Li(A([
-                Span(**{'data-uk-icon': 'icon: nut'}, className='uk-margin-small-right'), 'Investment'
+            html.Li(html.A([
+                html.Span(**{'data-uk-icon': 'icon: nut'}, className='uk-margin-small-right'), 'Investment'
             ], className='uk-flex uk-flex-middle')),
-            Li(A([
-                Span(**{'data-uk-icon': 'icon: file-text'}, className='uk-margin-small-right'), 'Bills and Payment'
+            html.Li(html.A([
+                html.Span(**{'data-uk-icon': 'icon: file-text'}, className='uk-margin-small-right'), 'Bills and Payment'
             ], className='uk-flex uk-flex-middle')),
-            Li(A([
-                Span(**{'data-uk-icon': 'icon: settings'}, className='uk-margin-small-right'), 'Analytics and Reports'
+            html.Li(html.A([
+                html.Span(**{'data-uk-icon': 'icon: settings'}, className='uk-margin-small-right'),
+                'Analytics and Reports'
             ], className='uk-flex uk-flex-middle')),
-            Li(className='uk-nav-divider uk-margin'),
-            Li([
-                Div(
-                    Img(className='uk-border-circle', width='44', height='44',
-                        src='https://oujdrprpkkwxeavzbaow.supabase.co/storage/v1/object/public/website_images/jurica'
-                            '-koletic-7YVZYZeITc8-unsplash_3_11zon.webp',
-                        alt='profile-pic'),
+            html.Li(className='uk-nav-divider uk-margin'),
+            html.Li([
+                html.Div(
+                    html.Img(className='uk-border-circle', width='44', height='44',
+                             src='https://oujdrprpkkwxeavzbaow.supabase.co/storage/v1/object/public/website_images/jurica'
+                                 '-koletic-7YVZYZeITc8-unsplash_3_11zon.webp',
+                             alt='profile-pic'),
                     className='uk-width-auto'
                 ),
-                Div([
-                    H3('Title', className='uk-card-title uk-margin-remove-bottom', style={'color': 'white'}),
-                    P('April 01, 2016', className='uk-text-meta uk-margin-remove-top')
+                html.Div([
+                    html.H3('Title', className='uk-card-title uk-margin-remove-bottom', style={'color': 'white'}),
+                    html.P('April 01, 2016', className='uk-text-meta uk-margin-remove-top')
                 ], className='uk-width-expand')
             ], className='uk-grid-small uk-flex-middle uk-margin-left uk-margin-top', **{'data-uk-grid': 'true'}),
-            Li(className='uk-nav-divider uk-margin'),
-            Li('Support', className='uk-nav-header', style={'color': 'white'}),
-            Li([
-                A([
-                    Span(**{'data-uk-icon': 'icon: mail'}, className='uk-margin-small-right'),
+            html.Li(className='uk-nav-divider uk-margin'),
+            html.Li('Support', className='uk-nav-header', style={'color': 'white'}),
+            html.Li([
+                html.A([
+                    html.Span(**{'data-uk-icon': 'icon: mail'}, className='uk-margin-small-right'),
                     'Send an invite'
                 ], className='uk-flex uk-flex-middle'),
-                Div([
-                    H3('Send an invite', className='uk-card-title uk-margin-remove-bottom'),
-                    P('Please enter the recipient\'s email address so we know who you’re sending to.',
-                      className='uk-text-small uk-margin-remove-top'),
-                    Div([
-                        Label('Email', className='uk-form-label'),
-                        Div([
-                            Span(**{'data-uk-icon': 'icon: mail'}, className='uk-form-icon'),
+                html.Div([
+                    html.H3('Send an invite', className='uk-card-title uk-margin-remove-bottom'),
+                    html.P('Please enter the recipient\'s email address so we know who you’re sending to.',
+                           className='uk-text-small uk-margin-remove-top'),
+                    html.Div([
+                        html.Label('Email', className='uk-form-label'),
+                        html.Div([
+                            html.Span(**{'data-uk-icon': 'icon: mail'}, className='uk-form-icon'),
                             dcc.Input(className='uk-input uk-form-blank', type='email', name='form-invite-name')
                         ], className='uk-inline')
                     ], className='uk-margin', style={'color': '#88A9C3'}),
-                    Div(
-                        Button("Send Invite",
-                               className='uk-button uk-button-large uk-width-1-1 uk-light',
-                               style={'backgroundColor': '#091235'}),
+                    html.Div(
+                        html.Button("Send Invite",
+                                    className='uk-button uk-button-large uk-width-1-1 uk-light',
+                                    style={'backgroundColor': '#091235'}),
                         className='uk-margin'
                     ),
-                    P(id='invite-notifications', className='uk-margin')
+                    html.P(id='invite-notifications', className='uk-margin')
                 ], className='uk-card uk-card-body uk-card-default', **{'data-uk-drop': 'true'})
             ], className='uk-inline'),
-            Li(A('Client Management')),
-            Li(A('Audit Logs')),
-            Li(A('Investment Reporting')),
-            Li(A('Admin Support Hub')),
+            html.Li(html.A('Client Management')),
+            html.Li(html.A('Audit Logs')),
+            html.Li(html.A('Investment Reporting')),
+            html.Li(html.A('Admin Support Hub')),
             sign_out_button()
         ], className='uk-nav uk-nav-default'),
         className='uk-card uk-card-body uk-card-default', style={'backgroundColor': '#2A3A58'}
     )
 
 
-# , hx_post='/send-invite/',
-#                                hx_target='#invite-notifications',
-#                                hx_include="[name='form-invite-name']"
-
 def overview_card():
-    return Div([
-        Div(
-            Div(
-                Div('Overview', className='uk-text-default uk-text-bolder'),
+    return html.Div([
+        html.Div(
+            html.Div(
+                html.Div('Overview', className='uk-text-default uk-text-bolder'),
                 className='uk-flex uk-flex-between'
             ),
             className='uk-card-header'
         ),
-        Div([
-            Div([
-                Div([
-                    Div('40', className='uk-text-large uk-text-bolder'),
-                    Div('Transactions', className='uk-text-truncate', style={'fontSize': '11px'})
+        html.Div([
+            html.Div([
+                html.Div([
+                    html.Div('40', className='uk-text-large uk-text-bolder'),
+                    html.Div('Transactions', className='uk-text-truncate', style={'fontSize': '11px'})
                 ]),
-                Div([
-                    Div('24', className='uk-text-large uk-text-bolder'),
-                    Div('Income', style={'fontSize': '11px'})
+                html.Div([
+                    html.Div('24', className='uk-text-large uk-text-bolder'),
+                    html.Div('Income', style={'fontSize': '11px'})
                 ]),
-                Div([
-                    Div('16', className='uk-text-large uk-text-bolder'),
-                    Div('Outcome', style={'fontSize': '11px'})
+                html.Div([
+                    html.Div('16', className='uk-text-large uk-text-bolder'),
+                    html.Div('Outcome', style={'fontSize': '11px'})
                 ])
             ], **{'data-uk-grid': 'true'}, className='uk-child-width-expand uk-text-center')
         ], className='uk-card-body'),
-        Div(calendar_view(), className='uk-card-footer')
+        html.Div(calendar_view(), className='uk-card-footer')
     ], className='uk-card uk-card-default uk-light', style={'backgroundColor': '#172031'})
 
 
@@ -119,18 +116,19 @@ def portfolio_value_card():
     df = px.data.gapminder()
     fig = px.scatter(df.query('year==2007'), x='gdpPercap', y='lifeExp', size='pop', color='continent',
                      hover_name='country', log_x=True, size_max=60)
-    return Div([
-        Div(
-            Div([
-                Div('Portfolio Value', className='uk-text-default uk-text-bolder'),
-                A(['US Dollar', Span(**{'data-uk-drop-parent-icon': 'true'})], className='uk-link-muted uk-text-small'),
-                Div(
-                    Ul(
+    return html.Div([
+        html.Div(
+            html.Div([
+                html.Div('Portfolio Value', className='uk-text-default uk-text-bolder'),
+                html.A(['US Dollar', html.Span(**{'data-uk-drop-parent-icon': 'true'})],
+                       className='uk-link-muted uk-text-small'),
+                html.Div(
+                    html.Ul(
                         [
-                            Li(A('US Dollar', className='uk-link-muted uk-text-small')),
-                            Li(A('ZA Rand', className='uk-link-muted uk-text-small')),
-                            Li(A('EURO', className='uk-link-muted uk-text-small')),
-                            Li(A('British Pound', className='uk-link-muted uk-text-small'))
+                            html.Li(html.A('US Dollar', className='uk-link-muted uk-text-small')),
+                            html.Li(html.A('ZA Rand', className='uk-link-muted uk-text-small')),
+                            html.Li(html.A('EURO', className='uk-link-muted uk-text-small')),
+                            html.Li(html.A('British Pound', className='uk-link-muted uk-text-small'))
                         ],
                         className='uk-list uk-list-divider'
                     ),
@@ -140,53 +138,53 @@ def portfolio_value_card():
             ], className='uk-flex uk-flex-between'),
             className='uk-card-header'
         ),
-        Div([
-            Div('Balance', className='uk-text-small'),
-            H2('R8,167,514.57',
-               className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate'),
-            Div(['Compared to last month ', Span('+24.17%', className='uk-text-success')],
-                className='uk-text-small uk-margin-remove-top')
+        html.Div([
+            html.Div('Balance', className='uk-text-small'),
+            html.H2('R8,167,514.57',
+                    className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate'),
+            html.Div(['Compared to last month ', html.Span('+24.17%', className='uk-text-success')],
+                     className='uk-text-small uk-margin-remove-top')
         ], className='uk-card-body'),
-        Div([
+        html.Div([
             dcc.Graph(figure=fig)
         ], className='uk-card-footer')
     ], className='uk-card uk-card-default uk-light', style={'backgroundColor': '#172031'})
 
 
 def assets_card():
-    return Div([
-        Div(
-            Div([
-                Div('Asset Allocation', className='uk-text-default uk-text-bolder'),
-                Div([
-                    Span(**{'data-uk-icon': 'icon: table'}),
-                    Span('Filter', className='uk-margin-small-left')
+    return html.Div([
+        html.Div(
+            html.Div([
+                html.Div('Asset Allocation', className='uk-text-default uk-text-bolder'),
+                html.Div([
+                    html.Span(**{'data-uk-icon': 'icon: table'}),
+                    html.Span('Filter', className='uk-margin-small-left')
                 ], className='uk-text-small uk-flex uk-flex-middle')
             ], className='uk-flex uk-flex-between'),
             className='uk-card-header'
         ),
-        Div([
-            Div('Quarterly Growth Rate', className='uk-text-small'),
-            H2('+24.17%', className='uk-text-bolder uk-margin-remove-top uk-text-success'),
-            Div([Div('0M'), Div('71M'), Div('142M')],
-                className='uk-flex uk-flex-between uk-text-bolder', style={'fontSize': '8px'}),
-            Hr(),
-            # Table(
+        html.Div([
+            html.Div('Quarterly Growth Rate', className='uk-text-small'),
+            html.H2('+24.17%', className='uk-text-bolder uk-margin-remove-top uk-text-success'),
+            html.Div([html.Div('0M'), html.Div('71M'), html.Div('142M')],
+                     className='uk-flex uk-flex-between uk-text-bolder', style={'fontSize': '8px'}),
+            html.Hr(),
+            # html.Table(
             #     Caption('Asset Allocation'),
             #     Thead(
-            #         Tr(
+            #         html.Tr(
             #             *[Th(title, scope='col') for title in ['Asset', 'Value']]
             #         ),
             #     ),
-            #     Tbody(
-            #         Tr([
-            #             Td(style={'--size': value}) for value in [0.7, 0.5, 0.4, 0.3, 0.2]
+            #     html.Tbody(
+            #         html.Tr([
+            #             html.Td(style={'--size': value}) for value in [0.7, 0.5, 0.4, 0.3, 0.2]
             #         ])
             #     ),
             #     className='charts-css bar multiple stacked'
             # ),
-            # Ul([
-            #     Li(Div([title, Br(), Span(value, className='uk-text-bolder')], className='uk-text-small'))
+            # html.Ul([
+            #     html.Li(Div([title, Br(),html.Span(value, className='uk-text-bolder')], className='uk-text-small'))
             #     for title, value in [
             #         ('Stocks (Equities)', '4,083,757.29 USD'),
             #         ('Bonds (Fixed Income Securities)', '1,633,502.91 USD'),
@@ -200,133 +198,120 @@ def assets_card():
 
 
 def performance_summary_card():
-    return Div([
-        Div(
-            Div([
-                Div('Performance Summary', className='uk-text-default uk-text-bolder'),
-                Div([
-                    Span(**{'data-uk-icon': 'icon: table'}),
-                    Span('Filter', className='uk-margin-small-left')
+    return html.Div([
+        html.Div(
+            html.Div([
+                html.Div('Performance Summary', className='uk-text-default uk-text-bolder'),
+                html.Div([
+                    html.Span(**{'data-uk-icon': 'icon: table'}),
+                    html.Span('Filter', className='uk-margin-small-left')
                 ], className='uk-text-small uk-flex uk-flex-middle')
             ], className='uk-flex uk-flex-between'),
             className='uk-card-header'
         ),
-        Div([
-            Div([
-                Div([
-                    Div('Top Performer: Stocks (Equities)', className='uk-text-small'),
-                    H2('R8,167,514.57',
-                       className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate'),
-                    Div(['Compared to last month ', Span('+24.17%', className='uk-text-success')],
-                        className='uk-text-small uk-margin-remove-top')
+        html.Div([
+            html.Div([
+                html.Div([
+                    html.Div('Top Performer: Stocks (Equities)', className='uk-text-small'),
+                    html.H2('R8,167,514.57',
+                            className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate'),
+                    html.Div(['Compared to last month ', html.Span('+24.17%', className='uk-text-success')],
+                             className='uk-text-small uk-margin-remove-top')
                 ]),
-                Button('View All', style={'backgroundColor': '#88A9C3', 'color': '#091235'},
-                       className='uk-button uk-button-small')
+                html.Button('View All', style={'backgroundColor': '#88A9C3', 'color': '#091235'},
+                            className='uk-button uk-button-small')
             ], className='uk-flex uk-flex-between uk-flex-middle'),
-            # Ul([
-            #     Li(title) for title in [
+            # html.Ul([
+            #     html.Li(title) for title in [
             #         'Stocks (Equities)', 'Bonds (Fixed Income Securities)', 'Real Estate', 'Commodities',
             #         'Cash and Cash Equivalents'
             #     ]
             # ], className='charts-css legend legend-inline legend-square uk-margin', style={'border': '0'}),
-            Div(
-                Div(
-                    Div([
-                        Div('142M'),
-                        Div('71M', className='uk-margin-auto-vertical'),
-                        Div('0M')
+            html.Div(
+                html.Div(
+                    html.Div([
+                        html.Div('142M'),
+                        html.Div('71M', className='uk-margin-auto-vertical'),
+                        html.Div('0M')
                     ], className='uk-flex uk-flex-column uk-flex-between uk-text-bolder', style={'fontSize': '8px'}),
                     className='uk-width-auto'
                 ),
                 **{'data-uk-grid': 'true'},
                 className='uk-grid-divider uk-child-width-expand uk-grid-match uk-grid-small'
             ),
-            Div([
-                Div('Jul'),
-                Div('Aug'),
-                Div('Sep'),
-                Div('Oct')
+            html.Div([
+                html.Div('Jul'),
+                html.Div('Aug'),
+                html.Div('Sep'),
+                html.Div('Oct')
             ], className='uk-flex uk-flex-between uk-text-bolder uk-text-small uk-margin',
                 style={'paddingLeft': '54px'})
         ], className='uk-card-body')
     ], className='uk-card uk-card-default uk-light', style={'backgroundColor': '#172031'})
 
 
-def client_insights_card(clients: list):
-    if not clients:  # Early return if no clients
-        return Div('No clients available', className='uk-text-danger')
-
-    client_items = [
-        Tr([
-            Td(
-                Div([
-                    Div(
-                        Img(
+@table_item_decorator
+def clients_table(clients: list):
+    header = create_table_header(['', 'Client'])
+    body = html.Tbody([
+        html.Tr([
+            html.Td([
+                html.A(href=f'/edit/{str(client.id)}/', **{'data-uk-icon': 'icon: pencil'},
+                       className='uk-icon-button')
+            ]),
+            html.Td(
+                html.Div([
+                    html.Div(
+                        html.Img(
                             className='uk-border-circle', width='60', height='60',
                             src=client.profile_picture_url or '',
                             alt='profile-pic'
-                        ) if client.profile_picture_url else Span(
+                        ) if client.profile_picture_url else html.Span(
                             **{'data-uk-icon': 'icon: user; ratio: 3;'}),
                         className='uk-width-auto'
                     ),
-                    Div([
-                        H3([
-                            Span(client.first_name or 'First name', className='uk-text-bolder'),
-                            Span(' '),
+                    html.Div([
+                        html.H3([
+                            html.Span(client.first_name or 'First name', className='uk-text-bolder'),
+                            html.Span(' '),
                             client.last_name or 'Last name'
                         ], className='uk-card-title uk-margin-remove-bottom', style={'color': 'white'}),
-                        Div(client.email or 'No email provided', style={'fontSize': '11px'}),
-                        P([
+                        html.Div(client.email or 'No email provided', style={'fontSize': '11px'}),
+                        html.P([
                             'Last active',
-                            Span(client.created_at.strftime('%B %d, %Y'),
-                                 className='uk-text-default uk-text-bolder uk-margin-small-left')
+                            html.Span(client.created_at.strftime('%B %d, %Y'),
+                                      className='uk-text-default uk-text-bolder uk-margin-small-left')
                         ], className='uk-text-meta uk-margin-remove-top')
                     ], className='uk-width-expand')
                 ], className='uk-grid-small uk-flex-middle', **{'data-uk-grid': 'true'}),
                 className='uk-flex uk-flex-between'
-            ),
-            Td(A(href=f'/edit/{str(client.id)}/', **{'data-uk-icon': 'icon: pencil'}))
-        ]) for client in clients
-    ]
+            )
+        ], className='uk-animation-fade') for client in clients
+    ]) if clients else None
 
-    return Div([
-        Div([
+    return create_table_wrapper(header, body, "No accounts found")
+
+
+def client_insights_card(clients: list):
+    if not clients:  # Early return if no clients
+        return html.Div('No clients available', className='uk-text-danger')
+
+    return html.Div([
+        html.Div([
             dcc.Store(id='selected-profile-id'),
-            Div([
-                Div('Client Insights', className='uk-text-default uk-text-bolder'),
-                Div([
-                    Span(**{'data-uk-icon': 'icon: table'}),
-                    Span('Filter', className='uk-margin-small-left')
+            html.Div([
+                html.Div('Client Insights', className='uk-text-default uk-text-bolder'),
+                html.Div([
+                    html.Span(**{'data-uk-icon': 'icon: table'}),
+                    html.Span('Filter', className='uk-margin-small-left')
                 ], className='uk-text-small uk-flex uk-flex-middle')
             ], className='uk-flex uk-flex-between')
         ], className='uk-card-header'),
-        Div(
-            Table([
-                Tbody([*client_items])
-            ], className='uk-table uk-table-hover'),
+        html.Div(
+            clients_table(clients),
             className='uk-card-body'
-        ),
-        Div(
-            Nav(
-                Ul([
-                    Li(
-                        A([
-                            Span(**{'data-uk-pagination-previous': 'true'}, className='uk-margin-small-right'),
-                            'Previous'
-                        ], href='#')
-                    ),
-                    Li(
-                        A([
-                            'Next',
-                            Span(**{'data-uk-pagination-next': 'true'}, className='uk-margin-small-left')
-                        ], href='#'),
-                        className='uk-margin-auto-left'
-                    )
-                ], className='uk-pagination', **{'data-uk-margin': 'true'})
-            ),
-            className='uk-card-footer'
         )
-    ], className='uk-card uk-card-default uk-light', style={'backgroundColor': '#172031'})
+    ], className='uk-card uk-card-secondary')
 
 
 # @callback(
@@ -353,14 +338,31 @@ def layout():
     with Session(engine) as session:
         clients = session.query(Profile).all()
         session.commit()
-        return Div([
-            Div([
-                # Div(menu_card()),
-                # Div(overview_card()),
-                Div(portfolio_value_card()),
-                Div(assets_card()),
-                Div(performance_summary_card(), className='uk-width-1-2@m'),
-                Div(client_insights_card(clients=clients), className='uk-width-1-2@m')
-            ], **{'data-uk-grid': 'true'},
-                className='uk-padding uk-child-width-1-4@m uk-grid-small uk-grid-match uk-flex-right')
-        ], style={'backgroundColor': '#091235'})
+        return html.Div([
+            html.Div(id='admin-nav',
+                     **{'data-uk-sticky': 'sel-target: .uk-navbar-container; className-active: uk-navbar-sticky'}),
+            dcc.Location(id='admin-url'),
+            html.Div([
+                html.Div(id='adm-nav',
+                         **{'data-uk-sticky': 'sel-target: .uk-navbar-container; className-active: uk-navbar-sticky'}),
+                dcc.Location(id='edit-url'),
+                html.Div([
+                    html.Div(menu_card()),
+                    market_performance(),
+                    # html.Div(overview_card()),
+                    html.Div(portfolio_value_card()),
+                    html.Div(assets_card()),
+                    html.Div(performance_summary_card(), className='uk-width-1-2@m'),
+                    html.Div(client_insights_card(clients=clients), className='uk-width-1-2@m')
+                ], **{'data-uk-grid': 'true'},
+                    className='uk-padding uk-child-width-1-4@m uk-grid-small uk-grid-match')
+            ], style={'backgroundColor': '#88A9C3'})
+        ])
+
+
+@callback(
+    Output('admin-nav', 'children'),
+    Input('admin-url', 'pathname')
+)
+def show_current_location(pathname):
+    return navbar(pathname)

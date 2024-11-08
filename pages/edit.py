@@ -9,35 +9,11 @@ from sqlalchemy.orm import Session, DeclarativeMeta
 
 from utils import (
     Profile, Account, Investment, Transaction, ClientGoal,
-    engine, DividendOrPayout, format_time, supabase_admin
+    engine, DividendOrPayout, format_time, supabase_admin, navbar, table_item_decorator, create_table_header,
+    create_table_wrapper
 )
 
-dash.register_page(__name__, path_template='/edit/<profile_id>/')
-
-
-def table_item_decorator(func):
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except Exception as e:
-            print(f"Error generating component: {e}")
-            return html.Div("An error occurred.", className='uk-alert uk-alert-danger')
-
-    return wrapper
-
-
-# ---- Table Components ----
-def create_table_header(columns, sticky=True):
-    """Utility function to create consistent table headers"""
-    return html.Thead([
-        html.Tr([
-            html.Th(col, className=f'uk-table-{"shrink" if i == 0 else "expand"}')
-            for i, col in enumerate(columns)
-        ])
-    ], **{
-        'data-uk-sticky': 'end: !.uk-height-max-large' if sticky else None,
-        'className': 'uk-background-secondary'
-    })
+dash.register_page(__name__, path_template='/edit/<profile_id>/', name='Edit Profile')
 
 
 def create_delete_item(type_id: str, item_id: str):
@@ -54,22 +30,6 @@ def create_delete_item(type_id: str, item_id: str):
             ], className='uk-card-footer')
         ], className='uk-card uk-card-default',
             **{'data-uk-dropdown': 'mode: click; pos: top-left; shift: false; flip: false'})
-    ])
-
-
-def create_table_wrapper(header, body, empty_message="No data available"):
-    """Utility function to create consistent table wrappers"""
-    return html.Div([
-        html.Div([
-            html.Table([
-                header,
-                body if body else html.Tbody(html.Tr(html.Td(
-                    empty_message,
-                    colSpan=len(header.children[0].children),
-                    className='uk-text-muted uk-text-center'
-                )))
-            ], className='uk-table uk-table-middle uk-table-divider uk-table-hover')
-        ], className='uk-overflow-auto uk-height-max-large')
     ])
 
 
@@ -256,9 +216,50 @@ def create_confirm_overlay():
 
 def create_section_card(title, table_component, add_link, profile_id):
     """Utility function to create consistent section cards"""
+    if title == 'Accounts':
+        chart = html.Div([
+            html.H2('R8,167,514.57',
+                    className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate'),
+            html.Div(['Compared to last month ', html.Span('+24.17%', className='uk-text-success')],
+                     className='uk-text-small uk-margin-remove-top')
+        ])
+
+    elif title == 'Dividends/Payouts':
+        chart = html.Div([
+            html.H2('R8,167,514.57',
+                    className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate'),
+            html.Div(['Compared to last month ', html.Span('+24.17%', className='uk-text-success')],
+                     className='uk-text-small uk-margin-remove-top')
+        ])
+
+    elif title == 'Client Goals':
+        chart = html.Div([
+            html.H2('R8,167,514.57',
+                    className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate'),
+            html.Div(['Compared to last month ', html.Span('+24.17%', className='uk-text-success')],
+                     className='uk-text-small uk-margin-remove-top')
+        ])
+
+    elif title == 'Investments':
+        chart = html.Div([
+            html.H2('R8,167,514.57',
+                    className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate'),
+            html.Div(['Compared to last month ', html.Span('+24.17%', className='uk-text-success')],
+                     className='uk-text-small uk-margin-remove-top')
+        ])
+
+    else:
+        chart = html.Div([
+            html.H2('R8,167,514.57',
+                    className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate'),
+            html.Div(['Compared to last month ', html.Span('+24.17%', className='uk-text-success')],
+                     className='uk-text-small uk-margin-remove-top')
+        ])
+
     return html.Div([
         html.Div([
-            html.Div(title, className='uk-card-header uk-text-bolder'),
+            html.Div([html.Span([title], className='uk-text-bolder'), chart],
+                     className='uk-card-header uk-flex uk-flex-between uk-flex-bottom'),
             html.Div(table_component, className='uk-card-body'),
             html.Div(
                 html.A([
@@ -289,18 +290,22 @@ def layout(profile_id: str):
     ]
 
     return html.Div([
+        html.Div(id='edit-nav',
+                 **{'data-uk-sticky': 'sel-target: .uk-navbar-container; className-active: uk-navbar-sticky'}),
         dcc.Location(id='edit-url'),
-        dcc.Store('profile-id-store', data=profile_id),
-        html.Div(id='refresh-trigger', style={'display': 'none'}),
-        html.Div(
-            html.Div([
-                html.Div(user_profile(profile)),
-                *[create_section_card(title, component, link, profile_id)
-                  for title, component, link in sections]
-            ], className="uk-child-width-1-2@s", **{'data-uk-grid': 'masonry: pack'}),
-            className='uk-container'
-        )
-    ], className='uk-section')
+        html.Div([
+            dcc.Store('profile-id-store', data=profile_id),
+            html.Div(id='refresh-trigger', style={'display': 'none'}),
+            html.Div(
+                html.Div([
+                    html.Div(user_profile(profile)),
+                    *[create_section_card(title, component, link, profile_id)
+                      for title, component, link in sections]
+                ], className="uk-child-width-1-2@m", **{'data-uk-grid': 'masonry: pack'}),
+                className='uk-container'
+            )
+        ], className='uk-section')
+    ])
 
 
 @callback(
@@ -356,6 +361,14 @@ def update_name(profile_id, first_name, last_name):
         if last_name is not None:
             profile.last_name = last_name
         session.commit()
+
+
+@callback(
+    Output('edit-nav', 'children'),
+    Input('edit-url', 'pathname')
+)
+def show_current_location(pathname):
+    return navbar(pathname)
 
 
 # Model mapping dictionary
