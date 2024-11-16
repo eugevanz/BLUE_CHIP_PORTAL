@@ -1,7 +1,8 @@
 dash
 supabase~=2.8.1
-matplotlib
-uvicorn
+shortnumbers
+gunicorn
 numpy
 sqlalchemy
 psycopg2-binary
+yfinance

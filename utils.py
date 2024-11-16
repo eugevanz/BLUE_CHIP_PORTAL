@@ -7,11 +7,10 @@ import dash
 import numpy as np
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 from dash import dcc, html
-from sqlalchemy import create_engine, Column, String, Float, DateTime, ForeignKey, func, UUID
+from sqlalchemy import create_engine, Column, String, Float, DateTime, ForeignKey, func, UUID, select
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Session
 from supabase import create_client
 
 SUPABASE_URL = environ.get('SUPABASE_URL')
@@ -113,6 +112,7 @@ class Transaction(Base):
 Base.metadata.create_all(engine, checkfirst=True)
 
 format_time = lambda x: x.strftime('%b %d, %Y')
+current_month_start = datetime(datetime.now().year, datetime.now().month, 1)
 
 # Custom color palette
 custom_colours = ['#88A9C3', '#2b4257', '#fc8c3a', '#f7edb5', '#ffcd06', '#9acf97', '#4b8ea9', '#7f7f7f', '#bcbd22',
@@ -125,59 +125,9 @@ fig_layout = {
     'paper_bgcolor': 'rgba(0, 0, 0, 0)',  # Use rgba for transparency
     'plot_bgcolor': 'rgba(0, 0, 0, 0)',
     'showlegend': False,
-    'margin': {'l': 0, 'r': 0, 't': 0, 'b': 0}
+    'margin': {'l': 0, 'r': 0, 't': 0, 'b': 0},
+    'font': {'size': 11, 'weight': 'bold'}
 }
-
-accounts_df = px.data.gapminder()
-continents_list = accounts_df['continent'].unique().tolist()
-account_fig = px.scatter(
-    accounts_df.query("year==2007"), x="gdpPercap", y="lifeExp", size="pop", color="continent", hover_name="country",
-    log_x=True, size_max=60, color_discrete_sequence=custom_colours
-)
-account_fig.update_layout(**fig_layout)
-
-payouts_df = px.data.stocks().head(12)
-dates_list = payouts_df['date'].tolist()
-payouts_fig = px.line(payouts_df, x='date', y='GOOG', markers=True, line_shape='spline')
-payouts_fig.update_traces(line=dict(width=8), marker=dict(size=12), line_color=custom_colours[0])
-payouts_fig.update_layout(**fig_layout)
-
-investments_df = pd.DataFrame({
-    'Investment': ['Investment A', 'Investment B', 'Investment C', 'Investment D', 'Investment E'],
-    'Returns': [12.5, 8.3, 15.2, 5.7, 9.1]  # hypothetical percentage returns
-})
-investment_list = investments_df['Investment'].tolist()
-investment_fig = px.bar(investments_df, x='Investment', y='Returns', color='Investment',
-                        color_discrete_sequence=custom_colours)
-investment_fig.update_layout(**fig_layout)
-
-goals_df = pd.DataFrame([
-    {'name': 'Goal 1', 'current': 30, 'target': 100},
-    {'name': 'Goal 2', 'current': 60, 'target': 80},
-    {'name': 'Goal 3', 'current': 50, 'target': 90},
-    {'name': 'Goal 4', 'current': 70, 'target': 120},
-    {'name': 'Goal 5', 'current': 20, 'target': 50}
-])
-goals_list = goals_df['name'].tolist()
-goals_fig = px.bar(goals_df, x='name', y=['current', 'target'], color_discrete_map={
-    'current': custom_colours, 'target': lighter_colours
-})
-goals_fig.update_layout(**fig_layout)
-
-transact_df = pd.DataFrame({
-    'amount': [100, 150, 200, 150, 300, 400, 100, 250, 300, 150,
-               100, 200, 100, 300, 400, 150, 250, 100, 200, 300,
-               250, 300, 350, 100, 200, 150, 400, 200, 300, 350,
-               200, 100, 250, 150, 300, 400, 300, 150, 100, 200],
-    'type': ['debit', 'credit', 'debit', 'credit', 'debit', 'credit', 'debit', 'credit', 'debit', 'credit',
-             'debit', 'credit', 'debit', 'credit', 'debit', 'credit', 'debit', 'credit', 'debit', 'credit',
-             'debit', 'credit', 'debit', 'credit', 'debit', 'credit', 'debit', 'credit', 'debit', 'credit',
-             'debit', 'credit', 'debit', 'credit', 'debit', 'credit', 'debit', 'credit', 'debit', 'credit']
-}).groupby('type')['amount'].sum().reset_index()
-transact_fig = px.pie(transact_df, values='amount', names='type', color='type', color_discrete_sequence=[
-    custom_colours[0], custom_colours[1]
-])
-transact_fig.update_layout(**fig_layout)
 
 # Set a seed for reproducibility
 np.random.seed(42)
@@ -195,32 +145,28 @@ high_prices = open_prices + np.random.uniform(0, 5, size=len(date_range))
 low_prices = open_prices - np.random.uniform(0, 5, size=len(date_range))
 close_prices = open_prices + np.random.uniform(-2, 2, size=len(date_range))
 
-market_df = pd.DataFrame({
-    "Date": date_range,
-    "Open": open_prices,
-    "High": high_prices,
-    "Low": low_prices,
-    "Close": close_prices
-}).head(30)
-market_fig = go.Figure(data=[
-    go.Candlestick(
-        x=market_df['Date'], open=market_df['Open'], high=market_df['High'], low=market_df['Low'],
-        close=market_df['Close'], increasing_line_color=custom_colours[0], decreasing_line_color=custom_colours[1]
-    )
-])
-market_fig.update_layout(**fig_layout)
+portfolio_df = pd.DataFrame({
+    'Month': pd.date_range(start="2024-01-01", periods=12, freq="ME"),
+    'Asset A': np.random.uniform(1000, 5000, size=12).cumsum(),
+    'Asset B': np.random.uniform(500, 2000, size=12).cumsum(),
+    'Asset C': np.random.uniform(2000, 8000, size=12).cumsum(),
+    'Asset D': np.random.uniform(1000, 3000, size=12).cumsum(),
+    'Asset E': np.random.uniform(300, 1500, size=12).cumsum(),
+    'Asset F': np.random.uniform(500, 2500, size=12).cumsum()
+})
+portfolio_fig = px.area(
+    portfolio_df.melt(id_vars=['Month'], var_name='Asset', value_name='Value'), x='Month', y='Value', color='Asset',
+    labels={'Value': 'Portfolio Value (Currency)', 'Month': 'Month'}, template='plotly_dark',
+    color_discrete_sequence=custom_colours
+)
+portfolio_fig.update_layout(**fig_layout)
 
-
-def indicator_fig(value: float = 400576.67):
-    fig = go.Figure(go.Indicator(
-        mode='number',
-        value=value,
-        number={'prefix': "R ", 'font': {'color': custom_colours[0]}},
-        domain={'x': [0, 1], 'y': [0, 1]})
-    )
-    fig.update_layout(**fig_layout)
-
-    return fig
+assets_df = pd.DataFrame({
+    'Asset': ['Asset A', 'Asset B', 'Asset C', 'Asset D', 'Asset E', 'Asset F', 'Asset G'],
+    'Value': np.random.uniform(1000, 10000, size=7)  # Generate random values for each asset
+}).sort_values(by='Value', ascending=False)
+assets_fig = px.pie(assets_df, names='Asset', values='Value', color_discrete_sequence=custom_colours)
+assets_fig.update_layout(**fig_layout)
 
 
 def handle_api_response(_func_):
@@ -328,14 +274,11 @@ def table_item_decorator(funct):
     return wrapper
 
 
-def create_table_header(columns, sticky=True):
+def create_table_header(columns, style=None):
     """Utility function to create consistent table headers"""
     return html.Thead([
-        html.Tr([
-            html.Th(col, className=f'uk-table-{"shrink" if i == 0 else "expand"}')
-            for i, col in enumerate(columns)
-        ])
-    ], **{'data-uk-sticky': 'end: !.uk-height-max-large' if sticky else None}, className='uk-background-secondary')
+        html.Tr(columns)
+    ], **{'data-uk-sticky': 'end: !.uk-height-max-large'}, className='uk-background-default', style=style)
 
 
 def create_table_wrapper(header, body, empty_message="No data available"):
@@ -574,462 +517,134 @@ def navbar(pathname: str):
     ], **{'data-uk-sticky': 'sel-target: .uk-navbar-container; className-active: uk-navbar-sticky'})
 
 
-def dividend_performance(order: str = None):
-    return html.Div([
-        html.Div([
-            html.Div([
-                html.Div('Dividend/Payout performance', className='uk-text-small'),
-                html.H2('R8,167,514.57',
-                        className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate'),
-                html.Div(['Compared to last month ', html.Span('+24.17%', className='uk-text-success')],
-                         className='uk-text-small uk-margin-remove-top')
-            ], className='uk-card-header'),
-            html.Div([
-                html.Div([
-                    html.Div([
-                        html.Div([
-                            html.Div([f'R {100000:,.2f}']),
-                            html.Div([f'R {500000:,.2f}'], className='uk-margin-auto-vertical'),
-                            html.Div([f'R {10000:,.2f}'])
-                        ], className='uk-flex uk-flex-column uk-height-medium',
-                            style={'fontSize': '8px'})
-                    ], className='uk-width-auto'),
-                    html.Div([
-                        dcc.Graph(figure=payouts_fig, style={'height': '300px'}, config={'displayModeBar': False}),
-                        html.Hr(),
-                        html.Div([
-                            html.Div([format_time(datetime.strptime(item, '%Y-%m-%d'))]) for item in
-                            [dates_list[0], dates_list[len(dates_list) // 2], dates_list[-1]]
-                        ], className='uk-flex uk-flex-between', style={'fontSize': '8px'})
-                    ])
-                ], **{'data-uk-grid': 'true'},
-                    className='uk-grid-divider uk-child-width-expand uk-grid-small')
-            ], className='uk-card-body')
-        ], className='uk-card uk-card-default')
-    ], className=order)
+def all_profile_data():
+    with Session(engine) as session:
+        profiles = session.query(Profile).all()
+
+        # Accounts
+        accounts = session.scalars(select(Account).order_by(Account.updated_at.desc())).all()
+        accounts_balance = sum(account.balance for account in accounts) if accounts else 0
+        accounts_balance_prior_current_month = session.query(func.sum(Account.balance)).filter(
+            Account.created_at < current_month_start
+        ).scalar() or 0  # Default to 0 if None
+
+        # Dividends and Payouts
+        dividends_and_payouts = session.scalars(
+            select(DividendOrPayout).where(DividendOrPayout.account_id.in_([account.id for account in accounts]))
+        ).all() if accounts else []
+        payouts_balance = sum(payout.amount for payout in dividends_and_payouts) if dividends_and_payouts else 0
+        dividends_and_payouts_amount_prior_current_month = session.query(
+            func.sum(DividendOrPayout.amount)).filter(
+            DividendOrPayout.created_at < current_month_start
+        ).scalar() or 0  # Default to 0 if None
+
+        # Client Goals
+        client_goals = session.scalars(select(ClientGoal)).all()
+        client_goals_balance = sum(goal.current_savings for goal in client_goals) if client_goals else 0
+        client_goals_current_savings_prior_current_month = session.query(
+            func.sum(ClientGoal.current_savings)).filter(
+            ClientGoal.created_at < current_month_start
+        ).scalar() or 0  # Default to 0 if None
+
+        # Transactions
+        transactions = session.scalars(select(Transaction).where(
+            Transaction.account_id.in_([account.id for account in accounts])
+        )).all() if accounts else []
+        transactions_balance = sum(transaction.amount for transaction in transactions) if transactions else 0
+        transactions_amount_prior_current_month = session.query(
+            func.sum(Transaction.amount)).filter(
+            Transaction.created_at < current_month_start
+        ).scalar() or 0  # Default to 0 if None
+
+        # Investments
+        investments = session.scalars(select(Investment).where(
+            Investment.account_id.in_([account.id for account in accounts])
+        )).all() if accounts else []
+        investments_balance = sum(investment.current_price for investment in investments) if investments else 0
+        investments_current_price_prior_current_month = session.query(
+            func.sum(Investment.current_price)).filter(
+            Investment.created_at < current_month_start
+        ).scalar() or 0  # Default to 0 if None
+
+        return dict(
+            profiles=profiles,
+            accounts=accounts,
+            accounts_balance=accounts_balance,
+            prior_accounts_balance=accounts_balance_prior_current_month,
+            dividends_and_payouts=dividends_and_payouts,
+            payouts_balance=payouts_balance,
+            prior_payouts_balance=dividends_and_payouts_amount_prior_current_month,
+            client_goals=client_goals,
+            client_goals_balance=client_goals_balance,
+            prior_client_goals_balance=client_goals_current_savings_prior_current_month,
+            transactions=transactions,
+            transactions_balance=transactions_balance,
+            prior_transactions_balance=transactions_amount_prior_current_month,
+            investments=investments,
+            investments_balance=investments_balance,
+            prior_investments_balance=investments_current_price_prior_current_month
+        )
 
 
-def account_performance(order: str = None):
-    return html.Div([
-        html.Div([
-            html.Div([
-                html.Div('Accounts performance', className='uk-text-small'),
-                html.H2('R8,167,514.57',
-                        className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate'),
-                html.Div(['Compared to last month ', html.Span('+24.17%', className='uk-text-success')],
-                         className='uk-text-small uk-margin-remove-top')
-            ], className='uk-card-header'),
-            html.Div([
-                html.Div([
-                    html.Div([
-                        html.Div([
-                            html.Div([f'R {100000:,.2f}']),
-                            html.Div([f'R {500000:,.2f}'], className='uk-margin-auto-vertical'),
-                            html.Div([f'R {10000:,.2f}'])
-                        ], className='uk-flex uk-flex-column uk-height-medium',
-                            style={'fontSize': '8px'})
-                    ], className='uk-width-auto'),
-                    html.Div([
-                        dcc.Graph(figure=account_fig, style={'height': '300px'}, config={'displayModeBar': False}),
-                        html.Hr(),
-                        html.Div([
-                            html.Div([
-                                html.Div(className='uk-border-circle', style={
-                                    'backgroundColor': custom_colours[i], 'width': '8px',
-                                    'height': '8px'
-                                }),
-                                html.Div([continent], className='uk-margin-small-left uk-text-small')
-                            ], className='uk-flex uk-flex-middle uk-margin-right') for i, continent in
-                            enumerate(continents_list)
-                        ], className='uk-flex uk-flex-wrap')
-                    ])
-                ], **{'data-uk-grid': 'true'},
-                    className='uk-grid-divider uk-child-width-expand uk-grid-small')
-            ], className='uk-card-body')
-        ], className='uk-card uk-card-default')
-    ], className=order)
+def profile_data(profile_id: str):
+    with Session(engine) as session:
+        profile = session.scalars(select(Profile).where(Profile.id == profile_id)).first()
 
+        accounts = session.scalars(
+            select(Account)
+            .where(Account.profile_id == profile_id)
+            .order_by(Account.updated_at.desc())
+        ).all()
+        accounts_balance = sum(account.balance for account in accounts) if accounts else 0
+        accounts_balance_prior_current_month = session.query(func.sum(Account.balance)).filter(
+            Account.profile_id == profile_id,
+            Account.created_at < current_month_start
+        ).scalar() or 0  # Default to 0 if None
 
-def investment_performance(order: str = None):
-    return html.Div([
-        html.Div([
-            html.Div([
-                html.Div('Investments performance', className='uk-text-small'),
-                html.H2('R8,167,514.57',
-                        className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate'),
-                html.Div(['Compared to last month ', html.Span('+24.17%', className='uk-text-success')],
-                         className='uk-text-small uk-margin-remove-top')
-            ], className='uk-card-header'),
-            html.Div([
-                html.Div([
-                    html.Div([
-                        html.Div([
-                            html.Div([f'R {100000:,.2f}']),
-                            html.Div([f'R {500000:,.2f}'], className='uk-margin-auto-vertical'),
-                            html.Div([f'R {10000:,.2f}'])
-                        ], className='uk-flex uk-flex-column uk-height-small',
-                            style={'fontSize': '8px'})
-                    ], className='uk-width-auto'),
-                    html.Div([
-                        dcc.Graph(figure=investment_fig, style={'height': '150px'}, config={'displayModeBar': False}),
-                        html.Hr(),
-                        html.Div([
-                            html.Div([
-                                html.Div(className='uk-border-circle', style={
-                                    'backgroundColor': custom_colours[i], 'width': '8px',
-                                    'height': '8px'
-                                }),
-                                html.Div([item], className='uk-margin-small-left uk-text-small')
-                            ], className='uk-flex uk-flex-middle uk-margin-right') for i, item in
-                            enumerate(
-                                investment_list)
-                        ], className='uk-flex uk-flex-wrap')
-                    ])
-                ], **{'data-uk-grid': 'true'},
-                    className='uk-grid-divider uk-child-width-expand uk-grid-small')
-            ], className='uk-card-body')
-        ], className='uk-card uk-card-default')
-    ], className=order)
+        dividends_and_payouts = session.scalars(
+            select(DividendOrPayout).where(DividendOrPayout.account_id.in_([account.id for account in accounts]))
+        ).all() if accounts else []
+        payouts_balance = sum(payout.amount for payout in dividends_and_payouts) if dividends_and_payouts else 0
+        payouts_balance_prior_current_month = session.query(func.sum(DividendOrPayout.amount)).filter(
+            DividendOrPayout.account_id.in_([account.id for account in accounts]),
+            DividendOrPayout.created_at < current_month_start  # Assuming 'created_at' exists in DividendOrPayout
+        ).scalar() or 0  # Default to 0 if None
 
+        client_goals = session.scalars(select(ClientGoal).where(ClientGoal.profile_id == profile_id)).all()
+        client_goals_balance = sum(goal.current_savings for goal in client_goals) if client_goals else 0
+        client_goals_balance_prior_current_month = session.query(func.sum(ClientGoal.current_savings)).filter(
+            ClientGoal.profile_id == profile_id,
+            ClientGoal.created_at < current_month_start
+        ).scalar() or 0  # Default to 0 if None
 
-def client_goal_performance(order: str = None):
-    return html.Div([
-        html.Div([
-            html.Div([
-                html.Div('Client Goals performance', className='uk-text-small'),
-                html.H2('R8,167,514.57',
-                        className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate'),
-                html.Div(['Compared to last month ', html.Span('+24.17%', className='uk-text-success')],
-                         className='uk-text-small uk-margin-remove-top')
-            ], className='uk-card-header'),
-            html.Div([
-                html.Div([
-                    html.Div([
-                        html.Div([
-                            html.Div([f'R {100000:,.2f}']),
-                            html.Div([f'R {500000:,.2f}'], className='uk-margin-auto-vertical'),
-                            html.Div([f'R {10000:,.2f}'])
-                        ], className='uk-flex uk-flex-column uk-height-small',
-                            style={'fontSize': '8px'})
-                    ], className='uk-width-auto'),
-                    html.Div([
-                        dcc.Graph(figure=goals_fig, style={'height': '150px'}, config={'displayModeBar': False}),
-                        html.Hr(),
-                        html.Div([
-                            html.Div([
-                                html.Div(className='uk-border-circle',
-                                         style={'backgroundColor': custom_colours[i], 'width': '8px',
-                                                'height': '8px'}),
-                                html.Div([item], className='uk-margin-small-left uk-text-small')
-                            ], className='uk-flex uk-flex-middle uk-margin-right') for i, item in
-                            enumerate(
-                                goals_list)
-                        ], className='uk-flex uk-flex-wrap')
-                    ])
-                ], **{'data-uk-grid': 'true'},
-                    className='uk-grid-divider uk-child-width-expand uk-grid-small')
-            ], className='uk-card-body')
-        ], className='uk-card uk-card-default')
-    ], className=order)
+        transactions = session.scalars(select(Transaction).where(
+            Transaction.account_id.in_([account.id for account in accounts])
+        )).all() if accounts else []
+        transactions_balance = sum(transaction.amount for transaction in transactions) if transactions else 0
+        transactions_balance_prior_current_month = session.query(func.sum(Transaction.amount)).filter(
+            Transaction.account_id.in_([account.id for account in accounts]),
+            Transaction.created_at < current_month_start  # Assuming 'created_at' exists in DividendOrPayout
+        ).scalar() or 0  # Default to 0 if None
 
+        investments = session.scalars(select(Investment).where(
+            Investment.account_id.in_([account.id for account in accounts])
+        )).all() if accounts else []
+        investments_balance = sum(investment.current_price for investment in investments) if investments else 0
+        investments_balance_prior_current_month = session.query(func.sum(Investment.current_price)).filter(
+            Investment.account_id.in_([account.id for account in accounts]),
+            Investment.created_at < current_month_start  # Assuming 'created_at' exists in DividendOrPayout
+        ).scalar() or 0  # Default to 0 if None
 
-def transaction_performance(order: str = None):
-    return html.Div([
-        html.Div([
-            html.Div([
-                html.Div('Transactions performance', className='uk-text-small'),
-                html.H2('R8,167,514.57',
-                        className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate'),
-                html.Div(['Compared to last month ', html.Span('+24.17%', className='uk-text-success')],
-                         className='uk-text-small uk-margin-remove-top')
-            ], className='uk-card-header'),
-            html.Div([
-                html.Div([
-                    html.Div([
-                        html.Div([
-                            html.Div([
-                                html.Div(className='uk-border-circle', style={
-                                    'backgroundColor': custom_colours[i], 'width': '8px',
-                                    'height': '8px'
-                                }),
-                                html.Div([
-                                    html.Div([item[0]], className='uk-text-uppercase'),
-                                    html.Div([f'R {item[1]:,.2f}'], className='uk-text-bolder')
-                                ], className='uk-margin-small-left')
-                            ], className='uk-flex uk-flex-middle uk-margin-right') for i, item in
-                            enumerate(list(transact_df.itertuples(index=False, name=None)))
-                        ], className='uk-flex uk-flex-column uk-height-small',
-                            style={'fontSize': '8px'})
-                    ], className='uk-width-auto'),
-                    html.Div(
-                        [dcc.Graph(figure=transact_fig, style={'height': '150px'}, config={'displayModeBar': False})])
-                ], **{'data-uk-grid': 'true'},
-                    className='uk-grid-divider uk-child-width-expand uk-grid-small')
-            ], className='uk-card-body')
-        ], className='uk-card uk-card-default')
-    ], className=order)
-
-
-def market_performance():
-    return html.Div([
-        html.Div([
-            html.Div([
-                html.Div([
-                    html.Div([
-                        html.Div('Market performance', className='uk-text-small'),
-                        html.H2(f'R {8167514.57:,.2f}',
-                                className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate'),
-                        html.Div([
-                            'Compared to last month ', html.Span('+24.17%', className='uk-text-success')
-                        ], className='uk-text-small uk-margin-remove-top')
-                    ]),
-                    html.Select([
-                        html.Option([label], value=value) for label, value in [
-                            ('S&P 500', 'S&P 500'), ('NASDAQ', 'NASDAQ'), ('Dow Jones', 'Dow Jones'),
-                            ('FTSE 100', 'FTSE 100')
-                        ]
-                    ], className='uk-select uk-form-small uk-form-blank uk-width-small', id='instrument')
-                ], className='uk-flex uk-flex-between uk-flex-bottom')
-            ], className='uk-card-header'),
-            html.Div([
-                html.Div([
-                    html.Div([
-                        html.Div([
-                            html.Div([f'R {100000:,.2f}']),
-                            html.Div([f'R {500000:,.2f}'], className='uk-margin-auto-vertical'),
-                            html.Div([f'R {10000:,.2f}'])
-                        ], className='uk-flex uk-flex-column uk-height-medium', style={'fontSize': '8px'})
-                    ], className='uk-width-auto'),
-                    html.Div([
-                        dcc.Graph(figure=market_fig, style={'height': '300px'}, config={'displayModeBar': False}),
-                        html.Hr(),
-                        html.Div([
-                            html.Div([
-                                format_time(item)
-                            ]) for item in [
-                                market_df.iloc[0]['Date'],
-                                market_df.iloc[int(len(market_df) * 0.25)]['Date'],
-                                market_df.iloc[int(len(market_df) * 0.75)]['Date'],
-                                market_df.iloc[-1]['Date']
-                            ]
-                        ], className='uk-flex uk-flex-between', style={'fontSize': '8px'})
-                    ])
-                ], **{'data-uk-grid': 'true'},
-                    className='uk-grid-divider uk-child-width-expand uk-grid-small')
-            ], className='uk-card-body'),
-            html.Div([
-                html.Div([
-                    html.Div([
-                        html.Div('S&P 500', style={'fontSize': '11px'}),
-                        html.Div(f'R {4376.95:,.2f}',
-                                 className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom '
-                                           'uk-text-truncate'),
-                        html.Div([
-                            '0.73% ', html.Span(**{'data-uk-icon': 'triangle-up'}, className='uk-text-success')
-                        ], className='uk-text-small uk-margin-remove-top')
-                    ]),
-                    html.Div([
-                        html.Div('NASDAQ', style={'fontSize': '11px'}),
-                        html.Div(f'R {14628.02:,.2f}',
-                                 className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom '
-                                           'uk-text-truncate'),
-                        html.Div([
-                            '-1.46% ', html.Span(**{'data-uk-icon': 'triangle-down'}, className='uk-text-danger')
-                        ], className='uk-text-small uk-margin-remove-top')
-                    ]),
-                    html.Div([
-                        html.Div('Dow Jones', style={'fontSize': '11px'}),
-                        html.Div(f'R {34588.87:,.2f}',
-                                 className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom '
-                                           'uk-text-truncate'),
-                        html.Div([
-                            '0.52% ', html.Span(**{'data-uk-icon': 'triangle-up'}, className='uk-text-success')
-                        ], className='uk-text-small uk-margin-remove-top')
-                    ]),
-                    html.Div([
-                        html.Div('FTSE 100', style={'fontSize': '11px'}),
-                        html.Div(f'R {7044.03:,.2f}',
-                                 className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom '
-                                           'uk-text-truncate'),
-                        html.Div([
-                            '0.20% ', html.Span(**{'data-uk-icon': 'triangle-up'}, className='uk-text-success')
-                        ], className='uk-text-small uk-margin-remove-top')
-                    ])
-                ], className='uk-flex uk-flex-between')
-            ], className='uk-card-footer')
-        ], className='uk-card uk-card-default')
-    ], className='uk-width-3-4@m')
-
-    # def potential_interest_calculators():
-    #     return html.Div(
-    #         [
-    #             html.Button(type='button', **{'data-uk-close': 'true'}, className='uk-modal-close-full uk-close-large'),
-    #             html.Div(
-    #                 [
-    #                     html.Div(
-    #                         [
-    #                             H3(
-    #                                 'Potential Interest Calculators',
-    #                                 style={'font-family': '"Playfair Display SC", serif', 'font-weight': '700', 'font-style': 'normal'},
-    #                                 className='uk-text-uppercase uk-text-bolder'
-    #                             ),
-    #                             html.Div(
-    #                                 '''These are tools designed to help individuals or businesses estimate the amount of
-    #                                 interest they could earn or owe over time based on various financial scenarios. These
-    #                                 calculators typically focus on interest accumulated from savings, loans, or investments and
-    #                                 can be tailored for specific financial goals.''',
-    #                                 className='uk-text-small uk-width-2-3@s'
-    #                             )
-    #                         ],
-    #                         className='uk-text-center'
-    #                     ),
-    #                     html.Div(
-    #                         [
-    #                             html.Div(
-    #                                 [
-    #                                     H4('Simple Interest Calculator'),
-    #                                     Form(
-    #                                         Fieldset(
-    #                                             [
-    #                                                 calc_input(label='Principal (P)', icon='bag',
-    #                                                            description='The initial amount of money that is being invested or loaned.'),
-    #                                                 calc_input(label='Interest Rate (R)', icon='arrow-up-right',
-    #                                                            description='The annual interest rate, usually provided as a percentage (e.g., 5%)'),
-    #                                                 calc_input(label='Time (T)', icon='clock',
-    #                                                            description='The time period for which the interest is calculated, typically in years.'),
-    #                                                 html.Div(
-    #                                                     [
-    #                                                         html.Div('Result', className='uk-text-bolder uk-text-small'),
-    #                                                         html.Hr(),
-    #                                                         html.Div(
-    #                                                             html.Span('0.00', className='uk-text-bolder'),
-    #                                                             ' per year'
-    #                                                         ),
-    #                                                         html.Hr()
-    #                                                     ],
-    #                                                     className='uk-margin'
-    #                                                 )
-    #                                             ],
-    #                                             className='uk-fieldset'
-    #                                         )
-    #                                     )
-    #                                 ],
-    #                                 className='uk-card uk-card-default uk-card-body uk-light',
-    #                                 style={'background-color': '#091235'}
-    #                             ),
-    #                             html.Div(
-    #                                 [
-    #                                     H4('Compound Interest Calculator'),
-    #                                     Form(
-    #                                         Fieldset(
-    #                                             [
-    #                                                 calc_input(label='Principal (P)', icon='bag',
-    #                                                            description='The initial amount of money that is being invested or loaned.'),
-    #                                                 calc_input(label='Interest Rate (R)', icon='arrow-up-right',
-    #                                                            description='The annual interest rate, usually provided as a percentage (e.g., 5%)'),
-    #                                                 calc_input(label='Time (T)', icon='clock',
-    #                                                            description='The time period for which the interest is calculated, typically in years.'),
-    #                                                 calc_input(label='Compounding Frequency (n)', icon='calendar',
-    #                                                            description='The number of times the interest is compounded per year (e.g., annually, semi-annually, quarterly, monthly, daily).'),
-    #                                                 html.Div('Common values for compounding frequency:',
-    #                                                     className='uk-text-small uk-padding-small uk-padding-remove-top'),
-    #                                                 html.Div(
-    #                                                     html.Ul(
-    #                                                         [
-    #                                                             html.Li('Annually (n = 1)'),
-    #                                                             html.Li('Semi-Annually (n = 2)'),
-    #                                                             html.Li('Quarterly (n = 4)'),
-    #                                                             html.Li('Monthly (n = 12)'),
-    #                                                             html.Li('Daily (n = 365)')
-    #                                                         ],
-    #                                                         className='uk-list uk-list-collapse uk-list-disc'
-    #                                                     ),
-    #                                                     className='uk-text-small uk-padding-small uk-padding-remove-top'
-    #                                                 ),
-    #                                                 html.Div(
-    #                                                     [
-    #                                                         html.Div('Result', className='uk-text-bolder uk-text-small'),
-    #                                                         html.Hr(),
-    #                                                         html.Div(
-    #                                                             html.Span('0.00', className='uk-text-bolder'),
-    #                                                             ' per year'
-    #                                                         ),
-    #                                                         html.Hr()
-    #                                                     ],
-    #                                                     className='uk-margin'
-    #                                                 )
-    #                                             ],
-    #                                             className='uk-fieldset'
-    #                                         )
-    #                                     )
-    #                                 ],
-    #                                 className='uk-card uk-card-default uk-card-body uk-light',
-    #                                 style={'background-color': '#091235'}
-    #                             ),
-    #                             html.Div(
-    #                                 [
-    #                                     H4('Savings Interest Calculator'),
-    #                                     Form(
-    #                                         Fieldset(
-    #                                             [
-    #                                                 calc_input(label='Principal (P)', icon='bag',
-    #                                                            description='The initial amount of money that is being invested or loaned.'),
-    #                                                 calc_input(label='Monthly Contributions (C)', icon='mail',
-    #                                                            description='The amount of money added to the account each month, if applicable.'),
-    #                                                 calc_input(label='Annual Interest Rate (R)', icon='mail',
-    #                                                            description='The interest rate provided by the savings account, usually expressed as a percentage.'),
-    #                                                 calc_input(label='Time (T)', icon='clock',
-    #                                                            description='The duration for which the savings will accumulate interest, typically measured in years.'),
-    #                                                 calc_input(label='Compounding Frequency (n)', icon='calendar',
-    #                                                            description='The number of times the interest is compounded per year (e.g., annually, semi-annually, quarterly, monthly, daily).'),
-    #                                                 html.Div('Common values for compounding frequency:',
-    #                                                     className='uk-text-small uk-padding-small uk-padding-remove-top'),
-    #                                                 html.Div(
-    #                                                     html.Ul(
-    #                                                         [
-    #                                                             html.Li('Annually (n = 1)'),
-    #                                                             html.Li('Semi-Annually (n = 2)'),
-    #                                                             html.Li('Quarterly (n = 4)'),
-    #                                                             html.Li('Monthly (n = 12)'),
-    #                                                             html.Li('Daily (n = 365)')
-    #                                                         ],
-    #                                                         className='uk-list uk-list-collapse uk-list-disc'
-    #                                                     ),
-    #                                                     className='uk-text-small uk-padding-small uk-padding-remove-top'
-    #                                                 ),
-    #                                                 html.Div(
-    #                                                     [
-    #                                                         html.Div('Result', className='uk-text-bolder uk-text-small'),
-    #                                                         html.Hr(),
-    #                                                         html.Div(
-    #                                                             html.Span('0.00', className='uk-text-bolder'),
-    #                                                             ' per year'
-    #                                                         ),
-    #                                                         html.Hr()
-    #                                                     ],
-    #                                                     className='uk-margin'
-    #                                                 )
-    #                                             ],
-    #                                             className='uk-fieldset'
-    #                                         )
-    #                                     )
-    #                                 ],
-    #                                 className='uk-card uk-card-default uk-card-body uk-light',
-    #                                 style={'background-color': '#091235'}
-    #                             )
-    #                         ],
-    #                         **{'data-uk-grid': 'masonry: pack'},
-    #                         className='uk-child-width-1-2@m uk-margin-medium-top'
-    #                     )
-    #                 ],
-    #                 className='uk-container'
-    #             )
-    #         ],
-    #         className='uk-section uk-section-medium',
-    #         id='potential-interest-calculators',
-    #         **{'data-uk-modal': 'true'},
-    #         className='uk-modal-full'
-    #     )
+        return dict(profile=profile, accounts=accounts, accounts_balance=accounts_balance,
+                    prior_accounts_balance=accounts_balance_prior_current_month,
+                    dividends_and_payouts=dividends_and_payouts, payouts_balance=payouts_balance,
+                    prior_payouts_balance=payouts_balance_prior_current_month, client_goals=client_goals,
+                    client_goals_balance=client_goals_balance,
+                    prior_client_goals_balance=client_goals_balance_prior_current_month,
+                    transactions=transactions, transactions_balance=transactions_balance,
+                    prior_transactions_balance=transactions_balance_prior_current_month, investments=investments,
+                    investments_balance=investments_balance,
+                    prior_investments_balance=investments_balance_prior_current_month)
 
 
 def footer():

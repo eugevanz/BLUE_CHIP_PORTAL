@@ -20,6 +20,7 @@ app = Dash(
     ],
     use_pages=True
 )
+server = app.server
 
 app.config.suppress_callback_exceptions = True
 

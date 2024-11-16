@@ -2,19 +2,33 @@ from datetime import date
 
 import dash
 from dash import dcc, callback, Output, Input, State, html
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from utils import engine, Account, Investment, navbar, investment_performance, account_performance, \
-    dividend_performance, client_goal_performance, \
+from edit_graphs import investment_performance, account_performance, dividend_performance, client_goal_performance, \
     transaction_performance
+from utils import engine, Investment, navbar, profile_data
 
 dash.register_page(__name__, path_template='/add-investment/<profile_id>/', name='Add Investment')
 
 
 def layout(profile_id: str):
-    with Session(engine) as session:
-        accounts = session.scalars(select(Account).where(Account.profile_id == profile_id)).all()
+    data = profile_data(profile_id)
+    profile = data['profile']
+    accounts = data['accounts']
+    accounts_balance = data['accounts_balance']
+    prior_accounts_balance = data['prior_accounts_balance']
+    dividends_and_payouts = data['dividends_and_payouts']
+    payouts_balance = data['payouts_balance']
+    prior_payouts_balance = data['prior_payouts_balance']
+    client_goals = data['client_goals']
+    client_goals_balance = data['client_goals_balance']
+    prior_client_goals_balance = data['prior_client_goals_balance']
+    transactions = data['transactions']
+    transactions_balance = data['transactions_balance']
+    prior_transactions_balance = data['prior_transactions_balance']
+    investments = data['investments']
+    investments_balance = data['investments_balance']
+    prior_investments_balance = data['prior_investments_balance']
 
     return html.Div([
         html.Div(id='inv-nav',
@@ -31,6 +45,11 @@ def layout(profile_id: str):
                                     'intended for growth, typically with specific goals or performance expectations.'],
                                    className='uk-text-meta'),
 
+                            html.Div([
+                                html.Div('Investment Start Date', className='uk-text-small'),
+                                dcc.DatePickerSingle(month_format='MMMM D, YYYY', className='uk-width-large',
+                                                     id='purchase_date', date=date.today())
+                            ], className='uk-margin'),
                             html.Div([
                                 html.Div('Select Account', className='uk-text-small'),
                                 html.Div([
@@ -107,21 +126,17 @@ def layout(profile_id: str):
                                     )
                                 ], className='uk-margin-remove-top uk-inline')
                             ], className='uk-margin'),
-                            html.Div([
-                                html.Div('Investment Start Date', className='uk-text-small'),
-                                dcc.DatePickerSingle(month_format='MMMM D, YYYY', className='uk-width-large',
-                                                     id='purchase_date', date=date.today())
-                            ], className='uk-margin'),
 
                             html.Button('Save', id='add-inv-btn', className='uk-button uk-button-primary uk-margin')
                         ], className='uk-card uk-card-body uk-margin-large-bottom')
                     ]),
 
-                    investment_performance('uk-flex-first@l'),
-                    account_performance(),
-                    dividend_performance(),
-                    client_goal_performance(),
-                    transaction_performance()
+                    investment_performance(investments=investments, total=investments_balance,prior=prior_investments_balance,
+                                           order='uk-flex-first@l'),
+                    account_performance(accounts=accounts, total=accounts_balance, prior=prior_accounts_balance),
+                    dividend_performance(dividends_and_payouts=dividends_and_payouts, total=payouts_balance,prior=prior_payouts_balance),
+                    client_goal_performance(client_goals=client_goals, total=client_goals_balance,prior=prior_client_goals_balance),
+                    transaction_performance(transactions=transactions, total=transactions_balance,prior=prior_transactions_balance)
 
                 ], **{'data-uk-grid': 'masonry: pack'}, className='uk-child-width-1-2@m')
 

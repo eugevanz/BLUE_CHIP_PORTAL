@@ -1,18 +1,32 @@
 import dash
 from dash import dcc, callback, Output, State, Input, html
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from utils import engine, Account, Transaction, navbar, transaction_performance, account_performance, \
-    dividend_performance, investment_performance, \
+from edit_graphs import transaction_performance, account_performance, dividend_performance, investment_performance, \
     client_goal_performance
+from utils import engine, Transaction, navbar, profile_data
 
 dash.register_page(__name__, path_template='/add-transaction/<profile_id>/', name='Add Transaction')
 
 
 def layout(profile_id: str):
-    with Session(engine) as session:
-        accounts = session.scalars(select(Account).where(Account.profile_id == profile_id)).all()
+    data = profile_data(profile_id)
+    profile = data['profile']
+    accounts = data['accounts']
+    accounts_balance = data['accounts_balance']
+    prior_accounts_balance = data['prior_accounts_balance']
+    dividends_and_payouts = data['dividends_and_payouts']
+    payouts_balance = data['payouts_balance']
+    prior_payouts_balance = data['prior_payouts_balance']
+    client_goals = data['client_goals']
+    client_goals_balance = data['client_goals_balance']
+    prior_client_goals_balance = data['prior_client_goals_balance']
+    transactions = data['transactions']
+    transactions_balance = data['transactions_balance']
+    prior_transactions_balance = data['prior_transactions_balance']
+    investments = data['investments']
+    investments_balance = data['investments_balance']
+    prior_investments_balance = data['prior_investments_balance']
 
     return html.Div([
         html.Div(id='tra-nav',
@@ -80,11 +94,12 @@ def layout(profile_id: str):
                         ], className='uk-card uk-card-body uk-margin-large-bottom')
                     ]),
 
-                    transaction_performance('uk-flex-first@l'),
-                    account_performance(),
-                    dividend_performance(),
-                    investment_performance(),
-                    client_goal_performance(),
+                    transaction_performance(transactions=transactions, total=transactions_balance,prior=prior_transactions_balance,
+                                            order='uk-flex-first@l'),
+                    account_performance(accounts=accounts, total=accounts_balance, prior=prior_accounts_balance),
+                    dividend_performance(dividends_and_payouts=dividends_and_payouts, total=payouts_balance,prior=prior_payouts_balance),
+                    investment_performance(investments=investments, total=investments_balance,prior=prior_investments_balance),
+                    client_goal_performance(client_goals=client_goals, total=client_goals_balance,prior=prior_client_goals_balance)
 
                 ], **{'data-uk-grid': 'masonry: pack'}, className='uk-child-width-1-2@m')
             ], className='uk-container')

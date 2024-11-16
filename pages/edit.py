@@ -4,13 +4,12 @@ from typing import Dict, Type
 import dash
 from dash import dcc, Output, callback, Input, State, html, ALL
 from dash.exceptions import PreventUpdate
-from sqlalchemy import select
-from sqlalchemy.orm import Session, DeclarativeMeta
+from sqlalchemy.orm import Session
 
 from utils import (
     Profile, Account, Investment, Transaction, ClientGoal,
     engine, DividendOrPayout, format_time, supabase_admin, navbar, table_item_decorator, create_table_header,
-    create_table_wrapper
+    create_table_wrapper, profile_data
 )
 
 dash.register_page(__name__, path_template='/edit/<profile_id>/', name='Edit Profile')
@@ -34,20 +33,19 @@ def create_delete_item(type_id: str, item_id: str):
 
 
 @table_item_decorator
-def accounts_table(id: str):
+def accounts_table(accounts: [Account]):
     """Generates the account management UI for a given client profile."""
-    with Session(engine) as session:
-        accounts = session.scalars(
-            select(Account)
-            .where(Account.profile_id == id)
-            .order_by(Account.updated_at.desc())
-        ).all()
-
-    header = create_table_header(['', 'Balance', 'Account Type', 'Account', 'Last Update'])
+    header = create_table_header([
+        html.Th('', className=f'uk-table-shrink'),
+        html.Th('Balance', className=f'uk-table-expand'),
+        html.Th('Account Type', className=f'uk-table-expand'),
+        html.Th('Account', className=f'uk-table-expand'),
+        html.Th('Last Update', className=f'uk-table-expand')
+    ], style={'backgroundColor': '#2A3A58'})
     body = html.Tbody([
         html.Tr([
             create_delete_item(type_id='delete_account', item_id=str(account.id)),
-            html.Td(f'R {account.balance:,.2f}', className='uk-text-right'),
+            html.Td(f'R {account.balance:,.2f}'),
             html.Td(account.account_type, className='uk-text-bolder uk-text-uppercase'),
             html.Td(account.account_number),
             html.Td(format_time(account.updated_at), className='uk-text-muted')
@@ -58,14 +56,16 @@ def accounts_table(id: str):
 
 
 @table_item_decorator
-def investments_table(accs: [Account]):
+def investments_table(investments: [Investment]):
     """Generates the investment management UI for a given client profile."""
-    with Session(engine) as session:
-        investments = session.scalars(select(Investment).where(
-            Investment.account_id.in_([account.id for account in accs])
-        )).all()
-
-    header = create_table_header(['', 'Investment', 'Amount', 'Purchase Price', 'Current Price', 'Start Date'])
+    header = create_table_header([
+        html.Th('', className=f'uk-table-shrink'),
+        html.Th('Investment', className=f'uk-table-expand'),
+        html.Th('Amount', className=f'uk-table-expand'),
+        html.Th('Purchase Price', className=f'uk-table-expand'),
+        html.Th('Current Price', className=f'uk-table-expand'),
+        html.Th('Last Updated', className=f'uk-table-expand')
+    ], style={'backgroundColor': '#2A3A58'})
     body = html.Tbody([
         html.Tr([
             create_delete_item(type_id='delete_investment', item_id=str(investment.id)),
@@ -75,21 +75,21 @@ def investments_table(accs: [Account]):
             html.Td(f'R {investment.current_price:,.2f}'),
             html.Td(format_time(investment.purchase_date))
         ], className='uk-animation-fade') for investment in investments
-    ]) if accs and investments else None
+    ])
 
     return create_table_wrapper(header, body, "No accounts found")
 
 
 @table_item_decorator
-def transactions_table(id: str):
+def transactions_table(transactions: [Transaction]):
     """Generates the transaction management UI for a given client profile."""
-    with Session(engine) as session:
-        accounts = session.scalars(select(Account).where(Account.profile_id == id)).all()
-        transactions = session.scalars(select(Transaction).where(
-            Transaction.account_id.in_([account.id for account in accounts])
-        )).all()
-
-    header = create_table_header(['', 'Description', 'Transaction Type', 'Amount', 'Last Updated'])
+    header = create_table_header([
+        html.Th('', className=f'uk-table-shrink'),
+        html.Th('Description', className=f'uk-table-expand'),
+        html.Th('Transaction Type', className=f'uk-table-expand'),
+        html.Th('Amount', className=f'uk-table-expand'),
+        html.Th('Last Updated', className=f'uk-table-expand')
+    ], style={'backgroundColor': '#2A3A58'})
     body = html.Tbody([
         html.Tr([
             create_delete_item(type_id='delete_transaction', item_id=str(transaction.id)),
@@ -99,20 +99,21 @@ def transactions_table(id: str):
             html.Td(f'R {transaction.amount:,.2f}'),
             html.Td(format_time(transaction.created_at))
         ], className='uk-animation-fade') for transaction in transactions
-    ]) if accounts and transactions else None
+    ])
 
     return create_table_wrapper(header, body, "No accounts found")
 
 
 @table_item_decorator
-def client_goals_table(id: str):
+def client_goals_table(client_goals: [ClientGoal]):
     """Generates the client goals management UI for a given client profile."""
-    with Session(engine) as session:
-        client_goals = session.scalars(
-            select(ClientGoal).where(ClientGoal.profile_id == id)
-        ).all()
-
-    header = create_table_header(['', 'Current Savings', 'Target Amount', 'Goal', 'Target Date'])
+    header = create_table_header([
+        html.Th('', className=f'uk-table-shrink'),
+        html.Th('Current Savings', className=f'uk-table-expand'),
+        html.Th('Target Amount', className=f'uk-table-expand'),
+        html.Th('Goal', className=f'uk-table-expand'),
+        html.Th('Target Date', className=f'uk-table-expand')
+    ], style={'backgroundColor': '#2A3A58'})
     body = html.Tbody([
         html.Tr([
             create_delete_item(type_id='delete_goal', item_id=str(goal.id)),
@@ -121,28 +122,27 @@ def client_goals_table(id: str):
             html.Td(html.Span(goal.goal_type, className='uk-text-bolder uk-text-uppercase')),
             html.Td(format_time(goal.target_date))
         ], className='uk-animation-fade') for goal in client_goals
-    ]) if client_goals else None
+    ])
 
     return create_table_wrapper(header, body, "No accounts found")
 
 
 @table_item_decorator
-def payouts_table(id: str):
+def payouts_table(dividends_and_payouts: [DividendOrPayout]):
     """Generates the payouts management UI for a given client profile."""
-    with Session(engine) as session:
-        accounts = session.scalars(select(Account).where(Account.profile_id == id)).all()
-        dividends_and_payouts = session.scalars(
-            select(DividendOrPayout).where(DividendOrPayout.account_id.in_([account.id for account in accounts]))
-        ).all()
+    header = create_table_header([
+        html.Th('', className=f'uk-table-shrink'),
+        html.Th('Payment Date', className=f'uk-table-expand'),
+        html.Th('Amount', className=f'uk-table-expand')
+    ], style={'backgroundColor': '#2A3A58'})
 
-    header = create_table_header(['', 'Payment Date', 'Amount'])
     body = html.Tbody([
         html.Tr([
             create_delete_item(type_id='delete_payout', item_id=str(payout.id)),
             html.Td(format_time(payout.payment_date)),
             html.Td(f'R {payout.amount:,.2f}')
         ], className='uk-animation-fade') for payout in dividends_and_payouts
-    ]) if dividends_and_payouts else None
+    ])
 
     return create_table_wrapper(header, body, "No accounts found")
 
@@ -182,14 +182,14 @@ def user_profile(profile: Profile):
         html.Div([
             html.Div([
                 dcc.Input(
-                    className='uk-form-blank uk-text-bolder uk-width-1-1 uk-h2 uk-margin-remove-bottom',
-                    placeholder=profile_data['first_name'],
+                    className='uk-form-blank uk-text-bolder uk-width-1-1 uk-h2 uk-margin-remove uk-text-secondary',
+                    value=profile_data['first_name'],
                     debounce=True,
                     id='first_name'
                 ),
                 dcc.Input(
                     className='uk-form-blank uk-text-bolder uk-width-1-1 uk-h2 uk-margin-remove-top',
-                    placeholder=profile_data['last_name'],
+                    value=profile_data['last_name'],
                     debounce=True,
                     id='last_name'
                 ),
@@ -201,7 +201,7 @@ def user_profile(profile: Profile):
                         style={'fontSize': '11px'}
                     )
                 ], className='uk-text-small')
-            ], className='uk-card uk-card-body uk-card-secondary')
+            ], className='uk-card uk-card-body uk-light uk-inline')
         ], className='uk-width-3-5')
     ], className='uk-grid-collapse uk-grid-match', **{'data-uk-grid': 'true'})
 
@@ -214,51 +214,27 @@ def create_confirm_overlay():
     ], **{'data-uk-dropdown': 'mode: click'})
 
 
-def create_section_card(title, table_component, add_link, profile_id):
-    """Utility function to create consistent section cards"""
-    if title == 'Accounts':
-        chart = html.Div([
-            html.H2('R8,167,514.57',
-                    className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate'),
-            html.Div(['Compared to last month ', html.Span('+24.17%', className='uk-text-success')],
-                     className='uk-text-small uk-margin-remove-top')
-        ])
-
-    elif title == 'Dividends/Payouts':
-        chart = html.Div([
-            html.H2('R8,167,514.57',
-                    className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate'),
-            html.Div(['Compared to last month ', html.Span('+24.17%', className='uk-text-success')],
-                     className='uk-text-small uk-margin-remove-top')
-        ])
-
-    elif title == 'Client Goals':
-        chart = html.Div([
-            html.H2('R8,167,514.57',
-                    className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate'),
-            html.Div(['Compared to last month ', html.Span('+24.17%', className='uk-text-success')],
-                     className='uk-text-small uk-margin-remove-top')
-        ])
-
-    elif title == 'Investments':
-        chart = html.Div([
-            html.H2('R8,167,514.57',
-                    className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate'),
-            html.Div(['Compared to last month ', html.Span('+24.17%', className='uk-text-success')],
-                     className='uk-text-small uk-margin-remove-top')
-        ])
-
+def create_section_card(title, table_component, add_link, profile_id, total=0, prior=0):
+    if prior == 0:
+        if total == 0:
+            total_difference = 0  # No change if both are zero
+        else:
+            total_difference = float('inf')  # Represent as an infinite increase if prior_total is zero but total is not
     else:
-        chart = html.Div([
-            html.H2('R8,167,514.57',
-                    className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate'),
-            html.Div(['Compared to last month ', html.Span('+24.17%', className='uk-text-success')],
-                     className='uk-text-small uk-margin-remove-top')
-        ])
+        total_difference = (total - prior) / prior * 100
+
+    header = html.Div([
+        html.H2([f'R {total:,.2f}'.replace(",", " ")],
+                className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate'),
+        html.Div(['Compared to last month ', html.Span([
+            html.Span(['+' if total_difference > 0 else '']), f'{total_difference:.2f}', '%'
+        ], className=f'uk-text-{"success" if total_difference > 0 else "danger"}')],
+                 className='uk-text-small uk-margin-remove-top')
+    ])
 
     return html.Div([
         html.Div([
-            html.Div([html.Span([title], className='uk-text-bolder'), chart],
+            html.Div([html.Span([title], className='uk-text-bolder'), header],
                      className='uk-card-header uk-flex uk-flex-between uk-flex-bottom'),
             html.Div(table_component, className='uk-card-body'),
             html.Div(
@@ -271,22 +247,40 @@ def create_section_card(title, table_component, add_link, profile_id):
                     href=f'{add_link}/{profile_id}/'),
                 className='uk-card-footer'
             )
-        ], className='uk-card uk-card-secondary dropdown')
+        ], className='uk-card uk-card-default dropdown uk-light', style={'backgroundColor': '#2A3A58'})
     ])
 
 
 def layout(profile_id: str):
     """Creates the layout for a client's profile page."""
-    with Session(engine) as session:
-        profile = session.scalars(select(Profile).where(Profile.id == profile_id)).first()
-        accounts = session.scalars(select(Account).where(Account.profile_id == profile_id)).all()
+    data = profile_data(profile_id)
+    profile = data['profile']
+    accounts = data['accounts']
+    accounts_balance = data['accounts_balance']
+    prior_accounts_balance = data['prior_accounts_balance']
+    dividends_and_payouts = data['dividends_and_payouts']
+    payouts_balance = data['payouts_balance']
+    prior_payouts_balance = data['prior_payouts_balance']
+    client_goals = data['client_goals']
+    client_goals_balance = data['client_goals_balance']
+    prior_client_goals_balance = data['prior_client_goals_balance']
+    transactions = data['transactions']
+    transactions_balance = data['transactions_balance']
+    prior_transactions_balance = data['prior_transactions_balance']
+    investments = data['investments']
+    investments_balance = data['investments_balance']
+    prior_investments_balance = data['prior_investments_balance']
 
     sections = [
-        ('Accounts', accounts_table(profile_id), '/add-account'),
-        ('Investments', investments_table(accounts), '/add-investment'),
-        ('Transactions', transactions_table(profile_id), '/add-transaction'),
-        ('Client Goals', client_goals_table(profile_id), '/add-client-goal'),
-        ('Dividends/Payouts', payouts_table(profile_id), '/add-payout')
+        ('Accounts', accounts_table(accounts), '/add-account', accounts_balance, prior_accounts_balance),
+        ('Investments', investments_table(investments), '/add-investment', investments_balance,
+         prior_investments_balance),
+        ('Transactions', transactions_table(transactions), '/add-transaction', transactions_balance,
+         prior_transactions_balance),
+        ('Client Goals', client_goals_table(client_goals), '/add-client-goal', client_goals_balance,
+         prior_client_goals_balance),
+        ('Dividends/Payouts', payouts_table(dividends_and_payouts), '/add-payout', payouts_balance,
+         prior_payouts_balance)
     ]
 
     return html.Div([
@@ -299,12 +293,12 @@ def layout(profile_id: str):
             html.Div(
                 html.Div([
                     html.Div(user_profile(profile)),
-                    *[create_section_card(title, component, link, profile_id)
-                      for title, component, link in sections]
+                    *[create_section_card(title, component, link, profile_id, total, prior)
+                      for title, component, link, total, prior in sections]
                 ], className="uk-child-width-1-2@m", **{'data-uk-grid': 'masonry: pack'}),
                 className='uk-container'
             )
-        ], className='uk-section')
+        ], className='uk-section', style={'backgroundColor': '#88A9C3'})
     ])
 
 
@@ -372,7 +366,7 @@ def show_current_location(pathname):
 
 
 # Model mapping dictionary
-MODEL_MAPPING: Dict[str, Type[DeclarativeMeta]] = {
+MODEL_MAPPING: Dict[str, Type[Account | Investment | Transaction | ClientGoal | DividendOrPayout]] = {
     'delete_account': Account,
     'delete_investment': Investment,
     'delete_transaction': Transaction,
