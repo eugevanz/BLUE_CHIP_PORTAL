@@ -9,7 +9,6 @@ from utils import format_time, portfolio_fig, portfolio_df, custom_colours, asse
 
 
 def market_performance():
-    print(yf.Ticker('MSFT').info)
     msft_current_price = yf.Ticker('MSFT').info.get('currentPrice')
     msft_previous_close = yf.Ticker('MSFT').info.get('open')
     msft_change = ((msft_current_price - msft_previous_close) / msft_previous_close) * 100
@@ -114,7 +113,7 @@ def market_performance():
                 ], className='uk-flex uk-flex-between')
             ], className='uk-card-footer')
         ], className='uk-card uk-card-default')
-    ], className='uk-width-3-4@m')
+    ], className='uk-width-4-5@m')
 
 
 @callback(

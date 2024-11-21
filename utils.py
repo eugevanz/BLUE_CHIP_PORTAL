@@ -16,9 +16,9 @@ from supabase import create_client
 SUPABASE_URL = environ.get('SUPABASE_URL')
 SUPABASE_KEY = environ.get('SUPABASE_KEY')
 SUPABASE_SERVICE_ROLE_KEY = environ.get('SUPABASE_SERVICE_ROLE_KEY')
+SUPABASE_PASSWORD = environ.get('SUPABASE_PASSWORD')
 supabase = create_client(supabase_url=SUPABASE_URL, supabase_key=SUPABASE_KEY)
 supabase_admin = create_client(supabase_url=SUPABASE_URL, supabase_key=SUPABASE_SERVICE_ROLE_KEY)
-SUPABASE_PASSWORD = environ.get('SUPABASE_PASSWORD')
 
 engine = create_engine(
     f'postgresql://postgres.oujdrprpkkwxeavzbaow:'
@@ -33,14 +33,18 @@ class Profile(Base):
     __tablename__ = 'profiles'
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     created_at = Column(DateTime, default=func.now())
-    profile_picture_url = Column(String, nullable=True)
-    first_name = Column(String, default='', nullable=True)
-    last_name = Column(String, default='', nullable=True)
+    profile_picture_url = Column(
+        String,
+        default='https://oujdrprpkkwxeavzbaow.supabase.co/storage/v1/object/public/website_images/jurica-koletic'
+                '-7YVZYZeITc8-unsplash_3_11zon.webp'
+    )
+    first_name = Column(String, default='First name')
+    last_name = Column(String, default='Last name')
     phone_number = Column(String, default='', nullable=True)
     profile_type = Column(String, default='client', nullable=True)
     date_of_birth = Column(DateTime, nullable=True)  # Assuming this is a date
     address = Column(String, default='', nullable=True)
-    email = Column(String, default='', nullable=True)
+    email = Column(String, default='email@address.com')
 
     # Relationships with other models
     accounts = relationship('Account', cascade='all, delete-orphan', backref='profile')
@@ -412,7 +416,7 @@ def sign_out_button():
         html.A([
             html.Span(**{'data-uk-icon': 'icon: sign-out'}, className='uk-margin-small-right'),
             'Sign Out'
-        ], className='uk-flex uk-flex-middle uk-text-danger uk-margin-top')
+        ], className='uk-flex uk-flex-middle uk-text-danger uk-margin-top uk-text-bolder', id='sign_out', n_clicks=0)
     )
 
 

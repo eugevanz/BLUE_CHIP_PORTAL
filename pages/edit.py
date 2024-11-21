@@ -152,7 +152,7 @@ def user_profile(profile: Profile):
     default_picture_url = ('https://oujdrprpkkwxeavzbaow.supabase.co/storage/v1/object/public/website_images/jurica'
                            '-koletic-7YVZYZeITc8-unsplash_3_11zon.webp')
 
-    profile_data = {
+    pro_data = {
         'picture_url': profile.profile_picture_url or default_picture_url,
         'first_name': profile.first_name or 'First Name',
         'last_name': profile.last_name or 'Last Name',
@@ -161,11 +161,11 @@ def user_profile(profile: Profile):
     }
 
     return html.Div([
-        dcc.Store('profile-pic-store', data=profile_data['picture_url']),
+        dcc.Store('profile-pic-store', data=pro_data['picture_url']),
         html.Div([
             html.Div([
                 html.Img(
-                    src=profile_data['picture_url'],
+                    src=pro_data['picture_url'],
                     alt='Profile Picture',
                     className='uk-cover',
                     **{'data-uk-cover': 'true'},
@@ -183,20 +183,20 @@ def user_profile(profile: Profile):
             html.Div([
                 dcc.Input(
                     className='uk-form-blank uk-text-bolder uk-width-1-1 uk-h2 uk-margin-remove uk-text-secondary',
-                    value=profile_data['first_name'],
+                    value=pro_data['first_name'],
                     debounce=True,
                     id='first_name'
                 ),
                 dcc.Input(
                     className='uk-form-blank uk-text-bolder uk-width-1-1 uk-h2 uk-margin-remove-top',
-                    value=profile_data['last_name'],
+                    value=pro_data['last_name'],
                     debounce=True,
                     id='last_name'
                 ),
                 html.Div([
-                    f'Member since {profile_data["created_at"]}',
+                    f'Member since {pro_data["created_at"]}',
                     html.Div(
-                        profile_data['email'],
+                        pro_data['email'],
                         className='uk-text-bolder',
                         style={'fontSize': '11px'}
                     )

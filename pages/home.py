@@ -1,9 +1,8 @@
 import dash
 from dash import dcc, callback, Output, Input, State
 from dash.html import Div, Img, Strong, P, Span, Button, H3
-from sqlalchemy.orm import Session
 
-from utils import supabase, engine, Profile
+from utils import supabase
 
 dash.register_page(__name__, path='/')
 
@@ -144,11 +143,9 @@ def verify_otp(n_clicks, login_email, sent_code):
                 access_token = response.session.access_token
 
                 if user_email in admin_users:
-                    with Session(engine) as session:
-                        clients = session.query(Profile).all()
-                    return dash.page_registry['pages.admin']['path'], access_token
+                    return f'/admin/{response.user.id}/', access_token
                 else:
-                    return dash.page_registry['pages.client_portal']['path'], access_token
+                    return f'/client_portal/{response.user.id}/', access_token
 
         except Exception as e:
             print(f'Admin Authentication error: {e}')

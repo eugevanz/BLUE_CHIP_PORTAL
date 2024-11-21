@@ -1,13 +1,13 @@
 from collections import defaultdict
 
 import dash
-from dash import dcc, html, callback, Output, Input
+from dash import dcc, html, callback, Output, Input, State
 
 from admin_graphs import market_performance, portfolio_performance, asset_performance, performance_summary
 from utils import sign_out_button, navbar, create_table_wrapper, table_item_decorator, create_table_header, \
-    all_profile_data
+    all_profile_data, format_time, supabase_admin, profile_data
 
-dash.register_page(__name__, path='/admin/', name='Admin')
+dash.register_page(__name__, path_template='/admin/<profile_id>/', name='Admin')
 
 data = all_profile_data()
 profiles = data['profiles']
@@ -28,78 +28,106 @@ investments_balance = data['investments_balance']
 prior_investments_balance = data['prior_investments_balance']
 
 
-def menu_card():
+def menu_card(profile_id=None):
+    recent_account = max(accounts, key=lambda account: account.updated_at)
+    recent_goal = max(client_goals, key=lambda goal: goal.updated_at)
+    recent_payout = max(dividends_and_payouts, key=lambda payout: payout.payment_date)
+    recent_invest = max(investments, key=lambda invest: invest.updated_at)
+    recent_trans = max(transactions, key=lambda trans: trans.created_at)
+    profile = profile_data(profile_id)
+
     return html.Div([
         html.Div([
             html.Div([
                 html.Img(className='uk-border-circle uk-margin', width='44', height='44',
-                         src='https://oujdrprpkkwxeavzbaow.supabase.co/storage/v1/object/public/website_images/jurica'
-                             '-koletic-7YVZYZeITc8-unsplash_3_11zon.webp',
+                         src=profile['profile'].profile_picture_url,
+                         # src='https://oujdrprpkkwxeavzbaow.supabase.co/storage/v1/object/public/website_images/jurica'
+                         # '-koletic-7YVZYZeITc8-unsplash_3_11zon.webp',
                          alt='profile-pic'),
                 html.Div(['Administrator'], className='uk-text-small'),
-                html.H3([html.Span('First name', className='uk-text-bolder'), ' Last name'],
-                        className='uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate'),
-                html.Div(['username@email.com'], className='uk-text-small uk-margin-remove-top')
+                html.H3([
+                    html.Span(profile['profile'].first_name, className='uk-text-bolder'),
+                    html.Br(), html.Span([profile['profile'].last_name])
+                ], className='uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate'),
+                html.Div([profile['profile'].email or 'email address'], className='uk-text-small uk-margin-remove-top')
             ], className='uk-card-header'),
             html.Div([
                 html.Ul([
-                    # html.Li('Menu', className='uk-nav-header', style={'color': 'white'}),
-                    # html.Li(html.A([
-                    #     html.Span(**{'data-uk-icon': 'icon: home'}, className='uk-margin-small-right'), 'Dashboard'
-                    # ], className='uk-flex uk-flex-middle')),
-                    # html.Li(html.A([
-                    #     html.Span(**{'data-uk-icon': 'icon: credit-card'}, className='uk-margin-small-right'), 'Transactions'
-                    # ], className='uk-flex uk-flex-middle')),
-                    # html.Li(html.A([
-                    #     html.Span(**{'data-uk-icon': 'icon: star'}, className='uk-margin-small-right'), 'My Goals'
-                    # ], className='uk-flex uk-flex-middle')),
-                    # html.Li(html.A([
-                    #     html.Span(**{'data-uk-icon': 'icon: nut'}, className='uk-margin-small-right'), 'Investment'
-                    # ], className='uk-flex uk-flex-middle')),
-                    # html.Li(html.A([
-                    #     html.Span(**{'data-uk-icon': 'icon: file-text'}, className='uk-margin-small-right'), 'Bills and Payment'
-                    # ], className='uk-flex uk-flex-middle')),
-                    # html.Li(html.A([
-                    #     html.Span(**{'data-uk-icon': 'icon: settings'}, className='uk-margin-small-right'),
-                    #     'Analytics and Reports'
-                    # ], className='uk-flex uk-flex-middle')),
-                    # html.Li(className='uk-nav-divider uk-margin'),
-
                     html.Li('Support', className='uk-nav-header'),
                     html.Li([
                         html.A([
-                            html.Span(**{'data-uk-icon': 'icon: mail'}, className='uk-margin-small-right'),
                             'Send an invite'
-                        ], className='uk-flex uk-flex-middle'),
+                        ], className='uk-link-reset', **{'data-uk-toggle': 'target: #offcanvas-invite'}),
                         html.Div([
-                            html.H3('Send an invite', className='uk-card-title uk-margin-remove-bottom'),
-                            html.P('Please enter the recipient\'s email address so we know who you’re sending to.',
-                                   className='uk-text-small uk-margin-remove-top'),
                             html.Div([
-                                html.Label('Email', className='uk-form-label'),
+                                html.H3(['Send an invite'], className='uk-heading-bullet'),
+                                html.P('Please enter the recipient\'s email address so we know who you’re sending to.',
+                                       className='uk-text-small uk-margin-remove-top'),
+                                html.Div('Email', className='uk-text-meta'),
                                 html.Div([
                                     html.Span(**{'data-uk-icon': 'icon: mail'}, className='uk-form-icon'),
-                                    dcc.Input(className='uk-input uk-form-blank', type='email', name='form-invite-name')
-                                ], className='uk-inline')
-                            ], className='uk-margin', style={'color': '#88A9C3'}),
-                            html.Div(
-                                html.Button("Send Invite",
-                                            className='uk-button uk-button-large uk-width-1-1 uk-light',
-                                            style={'backgroundColor': '#091235'}),
-                                className='uk-margin'
-                            ),
-                            html.P(id='invite-notifications', className='uk-margin')
-                        ], className='uk-card uk-card-body uk-card-default', **{'data-uk-drop': 'true'})
-                    ], className='uk-inline'),
-                    html.Li(html.A('Client Management')),
-                    html.Li(html.A('Audit Logs')),
-                    html.Li(html.A('Investment Reporting')),
-                    html.Li(html.A('Admin Support Hub')),
+                                    dcc.Input(className='uk-input', type='email', id='form-invite-email')
+                                ], className='uk-inline uk-width-1-1'),
+                                html.Div([
+                                    html.Button([
+                                        'Send Invite'
+                                    ], style={'backgroundColor': '#88A9C3'},
+                                        className='uk-button uk-button-large uk-width-1-1 uk-light',
+                                        id='form-invite-button', n_clicks=0),
+                                ], className='uk-margin'),
+                                html.P(id='invite-notifications', className='uk-margin')
+                            ], className='uk-offcanvas-bar')
+                        ], id='offcanvas-invite', **{'data-uk-offcanvas': 'mode: push; overlay: true'})
+                    ]),
+                    html.Li(html.A([
+                        'Client Management'
+                    ], href='#client-insights', **{'data-uk-scroll': 'true'}, className='uk-link-reset')),
+                    html.Li([
+                        html.A([
+                            'Audit Logs'
+                        ], **{'data-uk-toggle': 'target: #offcanvas-audit'}, className='uk-link-reset'),
+                        html.Div([
+                            html.Div([
+                                html.H3(['Audit Logs'], className='uk-heading-bullet'),
+                                html.P(
+                                    'Review and analyze system-generated records to monitor user actions, '
+                                    'ensure security and compliance, diagnose issues, and maintain operational insights.',
+                                    className='uk-text-small uk-margin-remove-top'),
+                                html.Div([
+                                    html.Table([
+                                        html.Caption(['Recent Updates'], className='uk-text-bolder'),
+                                        html.Tbody([
+                                            html.Tr([
+                                                html.Td([recent_account.account_type]),
+                                                html.Td([format_time(recent_account.updated_at)]),
+                                            ]),
+                                            html.Tr([
+                                                html.Td(['Goal: ', recent_goal.goal_type]),
+                                                html.Td([format_time(recent_goal.updated_at)]),
+                                            ]),
+                                            html.Tr([
+                                                html.Td(['Recent payout']),
+                                                html.Td([format_time(recent_payout.payment_date)]),
+                                            ]),
+                                            html.Tr([
+                                                html.Td([recent_invest.investment_type, ' investment']),
+                                                html.Td([format_time(recent_invest.updated_at)]),
+                                            ]),
+                                            html.Tr([
+                                                html.Td([recent_trans.type], className='uk-text-uppercase'),
+                                                html.Td([format_time(recent_trans.created_at)]),
+                                            ])
+                                        ]),
+                                    ], className='uk-table uk-table-divider')
+                                ], className='uk-margin')
+                            ], className='uk-offcanvas-bar')
+                        ], id='offcanvas-audit', **{'data-uk-offcanvas': 'mode: push; overlay: true'})
+                    ]),
                     sign_out_button()
                 ], className='uk-nav uk-nav-default')
             ], className='uk-card-body'),
-        ], className='uk-card uk-card-default uk-light', style={'backgroundColor': '#2A3A58'})
-    ])
+        ], className='uk-card')
+    ], className='uk-width-1-5@m')
 
 
 @table_item_decorator
@@ -182,7 +210,7 @@ def client_insights_card(profiles_: list):
                 clients_table(profiles_),
             ], className='uk-card-body')
         ], className='uk-card uk-card-default uk-light', style={'backgroundColor': '#2A3A58'})
-    ], className='uk-width-1-1')
+    ], className='uk-width-1-1', id='client-insights')
 
 
 # @callback(
@@ -205,8 +233,10 @@ def client_insights_card(profiles_: list):
 #     if profile_id: return f'/edit/{profile_id}/'
 
 
-def layout():
+def layout(profile_id: str):
     return html.Div([
+        dcc.Store(id='admin-url'),
+        dcc.Store(id='access_token', storage_type='session'),
         html.Div(id='admin-nav',
                  **{'data-uk-sticky': 'sel-target: .uk-navbar-container; className-active: uk-navbar-sticky'}),
         dcc.Location(id='admin-url'),
@@ -215,7 +245,7 @@ def layout():
                      **{'data-uk-sticky': 'sel-target: .uk-navbar-container; className-active: uk-navbar-sticky'}),
             dcc.Location(id='edit-url'),
             html.Div([
-                html.Div(menu_card()),
+                menu_card(profile_id),
                 market_performance(),
                 # html.Div(overview_card()),
                 portfolio_performance(),
@@ -236,3 +266,33 @@ def layout():
 )
 def show_current_location(pathname):
     return navbar(pathname)
+
+
+@callback(
+    Output('invite-notifications', 'children'),
+    State('form-invite-email', 'value'),
+    Input('form-invite-button', 'n_clicks')
+)
+def send_invite(email, n_clicks):
+    if n_clicks and email:
+        try:
+            response = supabase_admin.auth.admin.invite_user_by_email(email)
+            print(response)
+            if response and response.user:
+                return html.Span(f'Invite sent to {response.user.email}', className='uk-text-success uk-text-bolder')
+            else:
+                return html.Span(f'Error sending invite: {response["error"]["message"]}',
+                                 className='uk-text-danger uk-text-bolder')
+        except Exception as e:
+            return html.Span(f'Invitation error: {e}', className='uk-text-danger uk-text-bolder')
+
+
+@callback(
+    Output('admin-url', 'href'),
+    Output('access_token', 'data', allow_duplicate=True),
+    Input('sign_out', 'n_clicks'),
+    prevent_initial_call=True
+)
+def sign_out(n_clicks):
+    if n_clicks:
+        return '/', None

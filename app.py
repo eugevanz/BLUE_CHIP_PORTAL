@@ -3,7 +3,7 @@ from dash import Dash, dcc, callback, Output, Input
 from dash.html import Div
 from sqlalchemy.orm import Session
 
-from utils import supabase, engine, Profile
+from utils import supabase, engine
 
 app = Dash(
     external_scripts=[
@@ -46,14 +46,13 @@ def skip_login_page_if_token_exists(access_token, current_path):
 
             if response.user.email in admin_users:
                 with Session(engine) as session:
-                    clients = session.query(Profile).all()
                     session.commit()
                     if current_path == dash.page_registry['pages.home']['path']:
-                        return dash.page_registry['pages.admin']['path']
+                        return f'/admin/{response.user.id}/'
                     else:
                         return current_path
             else:
-                return dash.page_registry['pages.admin']['path']
+                return f'/client_portal/{response.user.id}/'
 
     except Exception as e:
         print(e)
