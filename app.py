@@ -1,8 +1,10 @@
 import dash
-from dash import Dash, dcc, callback, Output, Input
+from dash import Dash, dcc, callback, Output, Input, html
 from dash.html import Div
 from sqlalchemy.orm import Session
 
+from components.footer_section import footer
+from components.navbar import navbar
 from utils import supabase, engine
 
 app = Dash(
@@ -28,8 +30,8 @@ app.layout = Div([
     dcc.Location(id='url'),
     dcc.Store(id='access_token', storage_type='session'),
     dcc.Store(id='profile-id-store'),
-    # nav(),
-    dash.page_container
+    dash.page_container,
+    footer()
 ])
 
 
@@ -58,6 +60,13 @@ def skip_login_page_if_token_exists(access_token, current_path):
         print(e)
         return dash.page_registry['pages.home']['path']
 
+
+@callback(
+    Output('nav', 'children'),
+    Input('url', 'pathname')
+)
+def show_current_location(pathname):
+    return navbar(pathname)
 
 # @app.route('/')
 # def get(sess):

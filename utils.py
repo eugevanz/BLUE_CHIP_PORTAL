@@ -416,7 +416,8 @@ def sign_out_button():
         html.A([
             html.Span(**{'data-uk-icon': 'icon: sign-out'}, className='uk-margin-small-right'),
             'Sign Out'
-        ], className='uk-flex uk-flex-middle uk-text-danger uk-margin-top uk-text-bolder', id='sign_out', n_clicks=0)
+        ], className='uk-flex uk-flex-middle uk-button uk-button-danger uk-margin-top uk-text-bolder',
+            style={'color': 'white'}, id='sign_out', n_clicks=0)
     )
 
 
@@ -445,7 +446,17 @@ def precision_financial_tools():
                         *calculator_group3,
                         html.Li(className='uk-nav-divider'),
                         html.Li('Other Relevant Financial Metrics Calculators', className='uk-nav-header'),
-                        *calculator_group4,
+                        [nav_link(href, title) for href, title in [
+                            ("#other-relevant-financial-metrics-calculators", "Net Present Value (NPV) Calculator"),
+                            ("#other-relevant-financial-metrics-calculators",
+                             "Internal Rate of Return (IRR) Calculator"),
+                            ("#other-relevant-financial-metrics-calculators", "Debt-to-Income Ratio Calculator"),
+                            ("#other-relevant-financial-metrics-calculators", "Break-Even Point Calculator"),
+                            ("#other-relevant-financial-metrics-calculators", "Future Value (FV) Calculator"),
+                            ("#other-relevant-financial-metrics-calculators", "Cash Flow Calculator"),
+                            ("#other-relevant-financial-metrics-calculators", "Payback Period Calculator"),
+                            ("#other-relevant-financial-metrics-calculators", "Profit Margin Calculator")
+                        ]],
                     ],
                     className='uk-nav uk-navbar-dropdown-nav'
                 )
@@ -455,70 +466,7 @@ def precision_financial_tools():
     )
 
 
-def find_path_by_name(pathname):
-    # Split the pathname into segments and remove empty strings
-    segments = [segment for segment in pathname.split('/') if segment]
 
-    # Prepend 'edit' if any of the specified segments are present
-    if any(segment in segments for segment in
-           ['add-account', 'add-client-goal', 'add-investment', 'add-payout', 'add-transaction']):
-        segments.insert(0, 'edit')
-
-    # Always insert 'admin' at the beginning
-    segments.insert(0, 'admin') if 'admin' not in segments else None
-
-    breadcrumbs = []
-    profile_id = None
-
-    # Determine the profile ID from the segments
-    for segment in segments:
-        # Check if the segment is a profile ID
-        if not any(f'/{segment}/' in page['path'] for page in dash.page_registry.values()):
-            profile_id = segment
-            break  # Exit the loop once the profile ID is found
-
-    # Build breadcrumbs
-    for segment in segments:
-        for page in dash.page_registry.values():
-            # If the segment matches the page path, add to breadcrumbs
-            if f'/{segment}/' in page['path']:
-                breadcrumbs.append((page['name'], f'/{segment}/'))
-
-                # If the segment is one of the add operations, include the profile_id
-                if segment in ['add-account', 'add-client-goal', 'add-investment', 'add-payout',
-                               'add-transaction', 'edit'] and profile_id:
-                    # Update the last breadcrumb to include profile_id
-                    breadcrumbs[-1] = (page['name'], f'/{segment}/{profile_id}')
-
-    return breadcrumbs
-
-
-def navbar(pathname: str):
-    return html.Div([
-        html.Nav([
-            html.Div([
-                html.Div([
-                    html.Div([
-                        html.Div([
-                            html.Img(
-                                src='https://oujdrprpkkwxeavzbaow.supabase.co/storage/v1/object/public/website_images'
-                                    '/Blue%20Chip%20Invest%20Logo.001.png',
-                                width='60', height='60'),
-                            html.Div(['BLUE CHIP INVESTMENTS'],
-                                     style={'font-family': '"Noto Sans", sans-serif', 'font-optical-sizing': 'auto',
-                                            'font-weight': '400', 'font-style': 'normal', 'line-height': '22px',
-                                            'color': '#091235', 'width': '164px'})
-                        ], className='uk-navbar-item uk-logo'),
-                        html.Nav([
-                            html.Ul([
-                                html.Li([html.A(name, href=path)]) for name, path in find_path_by_name(pathname)
-                            ], className='uk-breadcrumb')
-                        ]),
-                    ], className='uk-navbar-left uk-flex-bottom')
-                ], **{'data-uk-navbar': 'true'})
-            ], className='uk-container')
-        ], className='uk-navbar-container')
-    ], **{'data-uk-sticky': 'sel-target: .uk-navbar-container; className-active: uk-navbar-sticky'})
 
 
 def all_profile_data():
@@ -649,159 +597,6 @@ def profile_data(profile_id: str):
                     prior_transactions_balance=transactions_balance_prior_current_month, investments=investments,
                     investments_balance=investments_balance,
                     prior_investments_balance=investments_balance_prior_current_month)
-
-
-def footer():
-    return html.Div(
-        html.Div(
-            html.Hr(),
-            html.Div(
-                html.Div(
-                    'BLUE CHIP INVESTMENTS',
-                    style={'font-family': 'Noto Sans, sans-serif', 'font-optical-sizing': 'auto',
-                           'font-weight': '400', 'font-style': 'normal'},
-                    className='uk-heading-small uk-margin-small-bottom uk-width-medium',
-                    # _get='/home/',
-                    # hx_target='#page'
-                ),
-                html.Div('Building Your Legacy with Trusted Growth', className='uk-text-small'),
-                className='uk-card uk-card-body'
-            ),
-            html.Div(
-                html.Div(
-                    html.Div(
-                        html.Div(
-                            'Our Services',
-                            className='uk-text-bolder uk-text-large uk-margin-small-bottom',
-                            style={'color': '#88A9C3'}
-                        ),
-                        html.Ul(
-                            [
-                                html.Li(html.A('Financial Planning', href='#')),
-                                html.Li(html.A('Investment Management', href='#')),
-                                html.Li(html.A('Retirement Planning', href='#')),
-                                html.Li(html.A('Investment Analysis', href='#')),
-                                html.Li(html.A('Insurance', href='#'))
-                            ],
-                            className='uk-list uk-text-small'
-                        ),
-                        className='uk-card uk-card-body'
-                    ),
-                    className='uk-width-auto'
-                ),
-                html.Div(
-                    html.Div(
-                        html.Div(
-                            'Explore',
-                            className='uk-text-bolder uk-text-large uk-margin-small-bottom',
-                            style={'color': '#88A9C3'}
-                        ),
-                        html.Ul(
-                            [
-                                html.Li(html.A('About', href='#')),
-                                html.Li(html.A('Services', href='#')),
-                                html.Li(html.A('Careers', href='#')),
-                                html.Li(html.A("FAQ's", href='#')),
-                                html.Li(html.A('Partner', href='#'))
-                            ],
-                            className='uk-list uk-text-small'
-                        ),
-                        className='uk-card uk-card-body'
-                    ),
-                    className='uk-width-auto'
-                ),
-                html.Div(
-                    html.Div(
-                        html.Div(
-                            "Let's Talk",
-                            className='uk-text-bolder uk-text-large uk-margin-small-bottom',
-                            style={'color': '#88A9C3'}
-                        ),
-                        html.P(
-                            'We\'re Here to Help You Grow Your Wealth, Plan Your Future, and Achieve Your Financial '
-                            'Goals',
-                            className='uk-text-small uk-light'
-                        ),
-                        html.Button(
-                            'Start',
-                            className='uk-button uk-light uk-text-bolder',
-                            style={'background-color': '#88A9C3', 'color': '#091235'},
-                            # hx_get='/contact-us/', hx_target='#page', hx_push_url='/home/'
-                        ),
-                        className='uk-card uk-card-body'
-                    )
-                ),
-                **{'data-uk-grid': 'true'},
-                className='uk-child-width-1-2 uk-child-width-1-3@l'
-            ),
-            html.Div(
-                html.Div(
-                    html.Div(
-                        html.Div(
-                            **{'data-uk-icon': 'icon: location; ratio: 1.8'},
-                            className='uk-icon',
-                            style={'color': '#88A9C3'}
-                        ),
-                        html.Div('Location', className='uk-text-large uk-text-bolder uk-light'),
-                        html.Div('Unit 17, No.30 Surprise Road, Pinetown, 3610',
-                                 className='uk-text-small uk-light'),
-                        className='uk-card uk-card-body'
-                    )
-                ),
-                html.Div(
-                    html.Div(
-                        html.Div(
-                            **{'data-uk-icon': 'icon: receiver; ratio: 1.8'},
-                            className='uk-icon'
-                        ),
-                        html.Div('Phone', className='uk-text-large uk-text-bolder uk-light'),
-                        html.Div('0860 258 2447', className='uk-text-small uk-light'),
-                        className='uk-card uk-card-body'
-                    )
-                ),
-                html.Div(
-                    html.Div(
-                        html.Div(
-                            **{'data-uk-icon': 'icon: mail; ratio: 1.8'},
-                            className='uk-icon'
-                        ),
-                        html.Div('Email', className='uk-text-large uk-text-bolder'),
-                        html.Div('info@', html.Br(), 'bluechipinvest.co.za', className='uk-text-small'),
-                        className='uk-card uk-card-body'
-                    )
-                ),
-                html.Div(
-                    html.Div(
-                        html.Div(
-                            **{'data-uk-icon': 'icon: social; ratio: 1.8'},
-                            className='uk-icon'
-                        ),
-                        html.Div('Social', className='uk-text-large uk-text-bolder',
-                                 style={'margin-bottom': '4px'}),
-                        html.Div(
-                            html.Div(
-                                [
-                                    html.Span(**{'data-uk-icon': 'icon: facebook'}, className='uk-icon-button uk-icon'),
-                                    html.Span(**{'data-uk-icon': 'icon: linkedin'}, className='uk-icon-button uk-icon'),
-                                    html.Span(**{'data-uk-icon': 'icon: instagram'},
-                                              className='uk-icon-button uk-icon'),
-                                    html.Span(**{'data-uk-icon': 'icon: x'}, className='uk-icon-button uk-icon')
-                                ],
-                                **{'data-uk-grid': 'true'},
-                                className='uk-grid-small uk-child-width-auto'
-                            ),
-                            className='uk-grid-small'
-                        ),
-                        className='uk-card uk-card-body'
-                    )
-                ),
-                **{'data-uk-grid': 'true'},
-                className='uk-child-width-1-2 uk-child-width-1-4@l'
-            ),
-            className='uk-container'
-        ),
-        className='uk-section uk-section-large uk-light', style={'background-color': '#091235'}
-    )
 
 
 def editor_graph_layout():

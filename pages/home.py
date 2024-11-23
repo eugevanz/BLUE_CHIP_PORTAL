@@ -1,18 +1,32 @@
 import dash
-from dash import dcc, callback, Output, Input, State
-from dash.html import Div, Img, Strong, P, Span, Button, H3
+from dash import dcc, callback, Output, Input, State, html
 
 from utils import supabase
 
-dash.register_page(__name__, path='/')
+dash.register_page(__name__, path='/', name='Welcome to Blue Chip Investments')
 
 
 def layout():
     """Creates the layout for the login page."""
-    return Div([
-        Div([
+    return html.Div([
+        html.Div([
+            html.Div([
+                html.Div([
+                    html.Img(
+                        src='https://oujdrprpkkwxeavzbaow.supabase.co/storage/v1/object/public/website_images'
+                            '/Blue%20Chip%20Invest%20Logo.001.png',
+                        width='60', height='60'),
+                    html.Div(['BLUE CHIP INVESTMENTS'],
+                             style={'fontFamily': '"Noto Sans", sans-serif', 'fontOpticalSizing': 'auto',
+                                    'fontWeight': '400', 'fontStyle': 'normal', 'lineHeight': '22px',
+                                    'color': '#091235', 'width': '164px'})
+                ], className='uk-logo uk-flex'),
+                html.Div(['Welcome to Blue Chip Investments'])
+            ], className='uk-grid-large uk-flex-bottom uk-padding-small', **{'data-uk-grid': 'true'})
+        ], className='uk-card uk-card-body'),
+        html.Div([
             # Background image section
-            Div(
+            html.Div(
                 style={
                     'backgroundImage': 'url('
                                        'https://oujdrprpkkwxeavzbaow.supabase.co/storage/v1/object/public'
@@ -24,15 +38,15 @@ def layout():
             ),
 
             # Main content section
-            Div([
+            html.Div([
                 # Logo
-                Img(
+                html.Img(
                     src='https://oujdrprpkkwxeavzbaow.supabase.co/storage/v1/object/public/website_images/Blue%20Chip'
                         '%20Invest%20Logo.001.png',
                     width='128', height='128'
                 ),
                 # Title
-                Div(
+                html.Div(
                     'BLUE CHIP INVESTMENTS',
                     style={
                         'fontFamily': '"Noto Sans", sans-serif',
@@ -43,46 +57,46 @@ def layout():
                     className='uk-heading-small uk-width-medium uk-margin-remove-top'
                 ),
                 # Subtitle
-                Div('Building Your Legacy with Trusted Growth', className='uk-text-small uk-margin-large-bottom'),
-                Div([
-                    H3('Welcome Back', className='uk-card-title uk-text-bolder uk-margin-remove-bottom'),
-                    P(
+                html.Div('Building Your Legacy with Trusted Growth', className='uk-text-small uk-margin-large-bottom'),
+                html.Div([
+                    html.H3('Welcome Back', className='uk-card-title uk-text-bolder uk-margin-remove-bottom'),
+                    html.P(
                         [
-                            'Please enter your ', Strong('email address'),
+                            'Please enter your ', html.Strong('email address'),
                             ' to log in. A magic link will be sent to your email, allowing you to securely access your '
                             'account.'
                         ],
                         className='uk-text-small uk-margin-remove-top',
                         style={'color': '#091235'}
                     ),
-                    Div('Email', className='uk-text-small'),
-                    Div([
-                        Span(className='uk-form-icon', **{'data-uk-icon': 'icon: mail'}),
+                    html.Div('Email', className='uk-text-small'),
+                    html.Div([
+                        html.Span(className='uk-form-icon', **{'data-uk-icon': 'icon: mail'}),
                         dcc.Input(className='uk-input uk-form-width-large', type='email', id='login-email')
                     ], className='uk-inline'),
-                    P('Please enter your email and click Send Code.', className='uk-text-meta'),
-                    Button('Send Code', className='uk-button uk-button-large uk-light',
-                           style={'backgroundColor': '#091235'}, id='request-otp-btn')
+                    html.P('Please enter your email and click Send Code.', className='uk-text-meta'),
+                    html.Button('Send Code', className='uk-button uk-button-large uk-light',
+                                style={'backgroundColor': '#091235'}, id='request-otp-btn')
                 ], id='email-input-container', className='uk-margin'),
 
-                Div([
-                    H3('Ready to sign-in?', className='uk-card-title uk-text-bolder uk-margin-remove-bottom'),
-                    P([
-                        'Please enter the ', Strong('verification code'),
+                html.Div([
+                    html.H3('Ready to sign-in?', className='uk-card-title uk-text-bolder uk-margin-remove-bottom'),
+                    html.P([
+                        'Please enter the ', html.Strong('verification code'),
                         ' that was sent to your email. This code is required to verify your identity and complete the '
                         'login process.'
                     ], className='uk-text-small uk-margin-remove-top', style={'color': '#091235'}),
-                    Div('One-time PIN', className='uk-text-small'),
-                    Div([
-                        Span(className='uk-form-icon', **{'data-uk-icon': 'icon: lock'}),
+                    html.Div('One-time PIN', className='uk-text-small'),
+                    html.Div([
+                        html.Span(className='uk-form-icon', **{'data-uk-icon': 'icon: lock'}),
                         dcc.Input(className='uk-input uk-form-width-large', type='text', id='sent-code')
                     ], className='uk-inline'),
-                    P('Please enter your OTP and click Sign In.', className='uk-text-meta'),
-                    Button('Sign In', className='uk-button uk-button-large uk-light',
-                           style={'backgroundColor': '#091235'}, id='verify-code-btn')
+                    html.P('Please enter your OTP and click Sign In.', className='uk-text-meta'),
+                    html.Button('Sign In', className='uk-button uk-button-large uk-light',
+                                style={'backgroundColor': '#091235'}, id='verify-code-btn')
                 ], id='otp-input-container', style={'display': 'none'}, className='uk-margin'),
 
-                P(id='send-code-notifications')
+                html.P(id='send-code-notifications')
             ], className='uk-padding-large')
         ], **{'data-uk-grid': 'true'}, className='uk-grid-collapse uk-child-width-1-2@m')
     ])
@@ -109,14 +123,15 @@ def request_otp(n_clicks, login_email):
                 return "", {'display': 'block'}, {'display': 'none'}
             else:
                 error_message = response.error.message
-                return P(f'Error sending OTP: {error_message}',
-                         className='uk-text-danger uk-text-bolder uk-margin'), dash.no_update, dash.no_update
+                return html.P(f'Error sending OTP: {error_message}',
+                              className='uk-text-danger uk-text-bolder uk-margin'), dash.no_update, dash.no_update
 
         except Exception as e:
-            return P(f'Authentication error: {str(e)}',
-                     className='uk-text-danger uk-text-bolder uk-margin'), dash.no_update, dash.no_update
+            return html.P(f'Authentication error: {str(e)}',
+                          className='uk-text-danger uk-text-bolder uk-margin'), dash.no_update, dash.no_update
 
-    return P('Please enter your email and click Send Code.', className='uk-text-small'), dash.no_update, dash.no_update
+    return html.P('Please enter your email and click Send Code.',
+                  className='uk-text-small'), dash.no_update, dash.no_update
 
 
 @callback(

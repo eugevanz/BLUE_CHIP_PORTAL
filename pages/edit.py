@@ -6,9 +6,10 @@ from dash import dcc, Output, callback, Input, State, html, ALL
 from dash.exceptions import PreventUpdate
 from sqlalchemy.orm import Session
 
+from components.navbar import navbar
 from utils import (
     Profile, Account, Investment, Transaction, ClientGoal,
-    engine, DividendOrPayout, format_time, supabase_admin, navbar, table_item_decorator, create_table_header,
+    engine, DividendOrPayout, format_time, supabase_admin, table_item_decorator, create_table_header,
     create_table_wrapper, profile_data
 )
 
@@ -284,8 +285,21 @@ def layout(profile_id: str):
     ]
 
     return html.Div([
-        html.Div(id='edit-nav',
-                 **{'data-uk-sticky': 'sel-target: .uk-navbar-container; className-active: uk-navbar-sticky'}),
+        html.Div([
+            html.Div([
+                html.Div([
+                    html.Img(
+                        src='https://oujdrprpkkwxeavzbaow.supabase.co/storage/v1/object/public/website_images'
+                            '/Blue%20Chip%20Invest%20Logo.001.png',
+                        width='60', height='60'),
+                    html.Div(['BLUE CHIP INVESTMENTS'],
+                             style={'fontFamily': '"Noto Sans", sans-serif', 'fontOpticalSizing': 'auto',
+                                    'fontWeight': '400', 'fontStyle': 'normal', 'lineHeight': '22px',
+                                    'color': '#091235', 'width': '164px'})
+                ], className='uk-logo uk-flex'),
+                html.Div([f'Edit Account / {profile.email}'])
+            ], className='uk-grid-large uk-flex-bottom uk-padding-small', **{'data-uk-grid': 'true'})
+        ], className='uk-card uk-card-body'),
         dcc.Location(id='edit-url'),
         html.Div([
             dcc.Store('profile-id-store', data=profile_id),

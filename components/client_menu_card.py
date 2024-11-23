@@ -1,6 +1,6 @@
 from dash import html
 
-from utils import sign_out_button
+from utils import sign_out_button, Profile
 
 messages = [
     ('Written by Super User on 08 March 2021. Posted in Blog',
@@ -112,17 +112,16 @@ investment_faqs = [
 ]
 
 
-def client_menu_card(profile):
+def client_menu(profile: Profile, width_class: str = 'uk-width-1-5@m'):
     return html.Div([
         html.Div([
             html.Div([
-                html.Img(className='uk-border-circle uk-margin', width='44', height='44',
+                html.Img(className='uk-border-circle', width='44', height='44',
                          src=profile.profile_picture_url, alt='profile-pic'),
-                html.Div(['Administrator'], className='uk-text-small'),
                 html.H3([
                     html.Span(profile.first_name, className='uk-text-bolder'),
                     html.Br(), html.Span([profile.last_name])
-                ], className='uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate'),
+                ], className='uk-margin-remove-bottom uk-margin-remove-top uk-text-truncate'),
                 html.Div([profile.email], className='uk-text-small uk-margin-remove-top')
             ], className='uk-card-header'),
             html.Div([
@@ -131,7 +130,7 @@ def client_menu_card(profile):
                         html.A([
                             html.Span(**{'data-uk-icon': 'icon: mail'}, className='uk-margin-small-right'),
                             'Messages'
-                        ], className='uk-flex uk-flex-middle', **{'data-uk-toggle': 'target: #messages'}),
+                        ], className='uk-flex uk-flex-middle uk-link-reset', **{'data-uk-toggle': 'target: #messages'}),
                         html.Div([
                             html.Div([
                                 html.Button(**{'data-uk-close': True}, className='uk-offcanvas-close'),
@@ -147,16 +146,11 @@ def client_menu_card(profile):
                             ], className='uk-offcanvas-bar'),
                         ], id='messages', **{'data-uk-offcanvas': 'mode: push; overlay: true'})
                     ]),
-                    html.Li([
-                        html.A([
-                            html.Span(**{'data-uk-icon': 'icon: nut'}, className='uk-margin-small-right'),
-                            'Investment'
-                        ], className='uk-flex uk-flex-middle')
-                    ]),
                     html.Li(className='uk-nav-divider uk-margin'),
-                    html.Li('Support', className='uk-nav-header', style={'color': 'white'}),
+                    html.Li('Support', className='uk-nav-header'),
                     html.Li([
-                        html.A(['Contact Support'], **{'data-uk-toggle': 'target: #contact-support'}),
+                        html.A(['Contact Support'], **{'data-uk-toggle': 'target: #contact-support'},
+                               className='uk-link-reset'),
                         html.Div([
                             html.Div([
                                 html.Button(**{'data-uk-close': 'true'}, className='uk-offcanvas-close'),
@@ -179,7 +173,7 @@ def client_menu_card(profile):
                         ], id='contact-support', **{'data-uk-offcanvas': 'mode: push; overlay: true'})
                     ]),
                     html.Li([
-                        html.A(['FAQs'], **{'data-uk-toggle': 'target: #faqs'}),
+                        html.A(['FAQs'], **{'data-uk-toggle': 'target: #faqs'}, className='uk-link-reset'),
                         html.Div([
                             html.Div([
                                 html.Button(**{'data-uk-close': 'true'}, className='uk-offcanvas-close'),
@@ -201,7 +195,8 @@ def client_menu_card(profile):
                         ], id='faqs', **{'data-uk-offcanvas': 'mode: push; overlay: true'})
                     ]),
                     html.Li([
-                        html.A(['Investment FAQs'], **{'data-uk-toggle': 'target: #investment-faqs'}),
+                        html.A(['Investment FAQs'], **{'data-uk-toggle': 'target: #investment-faqs'},
+                               className='uk-link-reset'),
                         html.Div([
                             html.Div([
                                 html.Button(**{'data-uk-close': 'true'}, className='uk-offcanvas-close'),
@@ -223,7 +218,7 @@ def client_menu_card(profile):
                         ], id='investment-faqs', **{'data-uk-offcanvas': 'mode: push; overlay: true'})
                     ]),
                     html.Li([
-                        html.A(['Service Status']),
+                        html.A(['Service Status'], className='uk-link-reset'),
                         html.Div([
                             'No reported issues. All services are functioning normally.'
                         ], **{'data-uk-drop': 'mode: click'}, className='uk-card uk-card-body uk-card-default')
@@ -232,4 +227,4 @@ def client_menu_card(profile):
                 ], className='uk-nav uk-nav-default')
             ], className='uk-card-body')
         ], className='uk-card')
-    ], className='uk-width-1-5@m')
+    ], className=width_class)

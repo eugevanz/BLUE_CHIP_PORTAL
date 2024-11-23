@@ -4,9 +4,13 @@ import dash
 from dash import dcc, callback, Output, State, Input, html
 from sqlalchemy.orm import Session
 
-from edit_graphs import dividend_performance, account_performance, investment_performance, client_goal_performance, \
-    transaction_performance
-from utils import engine, DividendOrPayout, navbar, profile_data
+from components.account_performance_card import account_performance
+from components.client_goal_performance_card import client_goal_performance
+from components.dividend_performance_card import dividend_performance
+from components.investment_performance_card import investment_performance
+from components.navbar import navbar
+from components.transaction_performance_card import transaction_performance
+from utils import engine, DividendOrPayout, profile_data
 
 dash.register_page(__name__, path_template='/add-payout/<profile_id>/', name='Add Dividend/Payout')
 
@@ -31,8 +35,21 @@ def layout(profile_id: str):
     prior_investments_balance = data['prior_investments_balance']
 
     return html.Div([
-        html.Div(id='pay-nav',
-                 **{'data-uk-sticky': 'sel-target: .uk-navbar-container; className-active: uk-navbar-sticky'}),
+        html.Div([
+            html.Div([
+                html.Div([
+                    html.Img(
+                        src='https://oujdrprpkkwxeavzbaow.supabase.co/storage/v1/object/public/website_images'
+                            '/Blue%20Chip%20Invest%20Logo.001.png',
+                        width='60', height='60'),
+                    html.Div(['BLUE CHIP INVESTMENTS'],
+                             style={'fontFamily': '"Noto Sans", sans-serif', 'fontOpticalSizing': 'auto',
+                                    'fontWeight': '400', 'fontStyle': 'normal', 'lineHeight': '22px',
+                                    'color': '#091235', 'width': '164px'})
+                ], className='uk-logo uk-flex'),
+                html.Div([f'Add Dividend/Payout / {profile.email}'])
+            ], className='uk-grid-large uk-flex-bottom uk-padding-small', **{'data-uk-grid': 'true'})
+        ], className='uk-card uk-card-body'),
         html.Div([
             dcc.Location(id='pay-url'),
             dcc.Store(id='profile-id-store', data=profile_id),
@@ -80,12 +97,16 @@ def layout(profile_id: str):
                         ], className='uk-card uk-card-body uk-margin-large-bottom')
                     ]),
 
-                    dividend_performance(dividends_and_payouts=dividends_and_payouts, total=payouts_balance,prior=prior_payouts_balance,
+                    dividend_performance(dividends_and_payouts=dividends_and_payouts, total=payouts_balance,
+                                         prior=prior_payouts_balance,
                                          order='uk-flex-first@l'),
                     account_performance(accounts=accounts, total=accounts_balance, prior=prior_accounts_balance),
-                    investment_performance(investments=investments, total=investments_balance,prior=prior_investments_balance),
-                    client_goal_performance(client_goals=client_goals, total=client_goals_balance,prior=prior_client_goals_balance),
-                    transaction_performance(transactions=transactions, total=transactions_balance,prior=prior_transactions_balance)
+                    investment_performance(investments=investments, total=investments_balance,
+                                           prior=prior_investments_balance),
+                    client_goal_performance(client_goals=client_goals, total=client_goals_balance,
+                                            prior=prior_client_goals_balance),
+                    transaction_performance(transactions=transactions, total=transactions_balance,
+                                            prior=prior_transactions_balance)
 
                 ], **{'data-uk-grid': 'masonry: pack'}, className='uk-child-width-1-2@m')
             ], className='uk-container')
