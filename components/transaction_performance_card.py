@@ -2,7 +2,7 @@ import pandas as pd
 import plotly.express as px
 from dash import html, dcc
 
-from utils import Transaction, custom_colours, fig_layout
+from utils import Transaction, custom_colours, fig_layout, format_currency
 
 
 def transaction_performance(transactions: [Transaction] = None, total: float = 0, prior: float = 0, order: str = None):
@@ -30,8 +30,7 @@ def transaction_performance(transactions: [Transaction] = None, total: float = 0
         html.Div([
             html.Div([
                 html.Div('Transactions performance', className='uk-text-small'),
-                html.H2([f'R {total:,.2f}'.replace(',', ' ')],
-                        className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate'),
+                format_currency(total),
                 html.Div(['Compared to last month ', html.Span([
                     html.Span(['+' if total_difference > 0 else '']),
                     f'{total_difference:.2f}', '%'

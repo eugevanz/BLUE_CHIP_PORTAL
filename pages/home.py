@@ -9,21 +9,21 @@ dash.register_page(__name__, path='/', name='Welcome to Blue Chip Investments')
 def layout():
     """Creates the layout for the login page."""
     return html.Div([
-        html.Div([
-            html.Div([
-                html.Div([
-                    html.Img(
-                        src='https://oujdrprpkkwxeavzbaow.supabase.co/storage/v1/object/public/website_images'
-                            '/Blue%20Chip%20Invest%20Logo.001.png',
-                        width='60', height='60'),
-                    html.Div(['BLUE CHIP INVESTMENTS'],
-                             style={'fontFamily': '"Noto Sans", sans-serif', 'fontOpticalSizing': 'auto',
-                                    'fontWeight': '400', 'fontStyle': 'normal', 'lineHeight': '22px',
-                                    'color': '#091235', 'width': '164px'})
-                ], className='uk-logo uk-flex'),
-                html.Div(['Welcome to Blue Chip Investments'])
-            ], className='uk-grid-large uk-flex-bottom uk-padding-small', **{'data-uk-grid': 'true'})
-        ], className='uk-card uk-card-body'),
+        # html.Div([
+        #     html.Div([
+        #         html.Div([
+        #             html.Img(
+        #                 src='https://oujdrprpkkwxeavzbaow.supabase.co/storage/v1/object/public/website_images'
+        #                     '/Blue%20Chip%20Invest%20Logo.001.png',
+        #                 width='60', height='60'),
+        #             html.Div(['BLUE CHIP INVESTMENTS'],
+        #                      style={'fontFamily': '"Noto Sans", sans-serif', 'fontOpticalSizing': 'auto',
+        #                             'fontWeight': '400', 'fontStyle': 'normal', 'lineHeight': '22px',
+        #                             'color': '#091235', 'width': '164px'})
+        #         ], className='uk-logo uk-flex'),
+        #         html.Div(['Welcome to Blue Chip Investments'])
+        #     ], className='uk-grid-large uk-flex-bottom uk-padding-small', **{'data-uk-grid': 'true'})
+        # ], className='uk-card uk-card-body'),
         html.Div([
             # Background image section
             html.Div(
@@ -135,8 +135,8 @@ def request_otp(n_clicks, login_email):
 
 
 @callback(
-    Output('url', 'href', allow_duplicate=True),
-    Output('access_token', 'data'),
+    [Output('url', 'href', allow_duplicate=True),
+    Output('access_token', 'data', allow_duplicate=True)],
     Input('verify-code-btn', 'n_clicks'),
     State('login-email', 'value'),
     State('sent-code', 'value'),
@@ -158,12 +158,12 @@ def verify_otp(n_clicks, login_email, sent_code):
                 access_token = response.session.access_token
 
                 if user_email in admin_users:
-                    return f'/admin/{response.user.id}/', access_token
+                    return [f'/admin/{response.user.id}/', access_token]
                 else:
-                    return f'/client_portal/{response.user.id}/', access_token
+                    return [f'/client_portal/{response.user.id}/', access_token]
 
         except Exception as e:
             print(f'Admin Authentication error: {e}')
-            return dash.no_update, dash.no_update
+            return [dash.no_update, dash.no_update]
 
-    return dash.no_update, dash.no_update
+    return [dash.no_update, dash.no_update]

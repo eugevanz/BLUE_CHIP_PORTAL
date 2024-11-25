@@ -53,7 +53,7 @@ def footer():
                         html.Button([
                             'Start'
                         ], className='uk-button uk-light uk-text-bolder',
-                            style={'background-color': '#88A9C3', 'color': '#091235'})
+                            style={'backgroundColor': '#88A9C3', 'color': '#091235'})
                     ], className='uk-card uk-card-body')
                 ])
             ], **{'data-uk-grid': 'true'}, className='uk-child-width-1-2 uk-child-width-1-3@l'),
@@ -89,7 +89,7 @@ def footer():
                             className='uk-icon'
                         ),
                         html.Div('Social', className='uk-text-large uk-text-bolder',
-                                 style={'margin-bottom': '4px'}),
+                                 style={'marginBottom': '4px'}),
                         html.Div([
                             html.Div([
                                 html.Span(**{'data-uk-icon': 'icon: facebook'}, className='uk-icon-button uk-icon'),

@@ -3,13 +3,14 @@ import plotly.express as px
 from dash import html, dcc
 from shortnumbers import millify
 
-from utils import custom_colours, fig_layout
+from utils import custom_colours, fig_layout, format_currency
 
 
 def performance_summary(accounts_balance: float, payouts_balance: float, client_goals_balance: float,
                         transactions_balance: float, investments_balance: float, prior_accounts_balance: float,
                         prior_payouts_balance: float, prior_client_goals_balance: float,
-                        prior_transactions_balance: float, prior_investments_balance: float):
+                        prior_transactions_balance: float, prior_investments_balance: float,
+                        width_class: str = 'uk-width-1-4@m'):
     total = sum([accounts_balance, payouts_balance, client_goals_balance, transactions_balance, investments_balance])
     prior = sum([
         prior_accounts_balance, prior_payouts_balance, prior_client_goals_balance, prior_transactions_balance,
@@ -44,8 +45,7 @@ def performance_summary(accounts_balance: float, payouts_balance: float, client_
         html.Div([
             html.Div([
                 html.Div(['Performance Summary'], className='uk-text-small'),
-                html.H2([f'R {total:,.2f}'.replace(',', ' ')],
-                        className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate'),
+                format_currency(total),
                 html.Div(['Compared to last month ', html.Span([
                     html.Span(['+' if total_difference > 0 else '']),
                     f'{total_difference:.2f}', '%'
@@ -81,4 +81,4 @@ def performance_summary(accounts_balance: float, payouts_balance: float, client_
                 ], className='uk-flex uk-flex-wrap', style={'fontSize': '11px'})
             ], className='uk-card-footer')
         ], className='uk-card uk-card-default uk-light', style={'backgroundColor': '#2A3A58'})
-    ], className='uk-width-1-3@m')
+    ], className=width_class,id='performance-summary')

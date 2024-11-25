@@ -3,11 +3,11 @@ import uuid
 from datetime import datetime
 from os import environ
 
-import dash
 import numpy as np
 import pandas as pd
 import plotly.express as px
 from dash import dcc, html
+from shortnumbers import millify
 from sqlalchemy import create_engine, Column, String, Float, DateTime, ForeignKey, func, UUID, select
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, Session
@@ -285,7 +285,7 @@ def create_table_header(columns, style=None):
     ], **{'data-uk-sticky': 'end: !.uk-height-max-large'}, className='uk-background-default', style=style)
 
 
-def create_table_wrapper(header, body, empty_message="No data available"):
+def create_table_wrapper(body, header=None, empty_message="No data available"):
     """Utility function to create consistent table wrappers"""
     return html.Div([
         html.Div([
@@ -293,12 +293,39 @@ def create_table_wrapper(header, body, empty_message="No data available"):
                 header,
                 body if body else html.Tbody(html.Tr(html.Td(
                     empty_message,
-                    colSpan=len(header.children[0].children),
+                    colSpan=len(header.children[0].children) if header else None,
                     className='uk-text-muted uk-text-center'
                 )))
-            ], className='uk-table uk-table-middle uk-table-divider uk-table-hover')
-        ], className='uk-overflow-auto uk-height-max-large')
-    ])
+            ], className='uk-table uk-table-middle uk-table-divider uk-table-hover uk-height-1-1')
+        ], className='uk-overflow-auto uk-flex-1')
+    ], className='uk-flex uk-flex-column uk-height-1-1')
+
+
+def format_currency(value):
+    """
+    Format a numeric value into a human-readable string and style numeric characters.
+
+    Parameters:
+    - value: The numeric value to format.
+    - precision: The precision for millify.
+
+    Returns:
+    - A Dash HTML Span element with styled numeric characters.
+    """
+    # Use millify to create a formatted string
+    formatted_string = millify(value, precision=2)
+
+    # Use regex to split the string into number and unit
+    import re
+    match = re.match(r'([\d.,]+)(.*)', formatted_string)
+    if match:
+        number, unit = match.groups()
+        return html.Div([
+            html.Span(['R '], className='uk-h3 uk-text-bolder'),
+            html.Span([number], className='uk-h2 uk-text-bolder'),  # Larger style for the numeric part
+            html.Span([unit], className='uk-h3 uk-text-bolder')  # Regular style for the unit
+        ], className='uk-margin-remove-top uk-margin-remove-bottom')
+    return html.Span(formatted_string)  # Fallback if string doesn't match the pattern
 
 
 def add_save_button(name: str, target: str):
@@ -464,9 +491,6 @@ def precision_financial_tools():
             className='uk-navbar-dropdown uk-width-large'
         )
     )
-
-
-
 
 
 def all_profile_data():

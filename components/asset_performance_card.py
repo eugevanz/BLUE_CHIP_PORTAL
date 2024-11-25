@@ -3,7 +3,7 @@ from dash import html, dcc
 from utils import assets_df, custom_colours, assets_fig
 
 
-def asset_performance():
+def asset_performance(width_class: str = 'uk-width-1-4@m'):
     return html.Div([
         html.Div([
             html.Div([
@@ -35,4 +35,4 @@ def asset_performance():
                 ], className='uk-flex uk-flex-wrap', style={'fontSize': '11px'})
             ], className='uk-card-footer'),
         ], className='uk-card uk-card-default uk-light', style={'backgroundColor': '#2A3A58'})
-    ], className='uk-width-1-3@m')
+    ], className=width_class)

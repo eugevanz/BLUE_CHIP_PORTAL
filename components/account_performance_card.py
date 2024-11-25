@@ -3,7 +3,7 @@ import plotly.express as px
 from dash import html, dcc
 from shortnumbers import millify
 
-from utils import custom_colours, fig_layout, Account
+from utils import custom_colours, fig_layout, Account, format_currency
 
 
 def account_performance(accounts: [Account] = None, total: float = 0, prior: float = 0,
@@ -43,8 +43,7 @@ def account_performance(accounts: [Account] = None, total: float = 0, prior: flo
         html.Div([
             html.Div([
                 html.Div('Accounts performance', className='uk-text-small'),
-                html.H2([f'R {total:,.2f}'.replace(',', ' ')],
-                        className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate'),
+                format_currency(total),
                 html.Div(['Compared to last month ', html.Span([
                     html.Span(['+' if total_difference > 0 else '']),
                     f'{total_difference:.2f}', '%'

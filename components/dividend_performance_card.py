@@ -3,7 +3,7 @@ from dash import html, dcc
 from shortnumbers import millify
 import plotly.express as px
 
-from utils import format_time, custom_colours, fig_layout, DividendOrPayout
+from utils import format_time, custom_colours, fig_layout, DividendOrPayout, format_currency
 
 
 def dividend_performance(dividends_and_payouts: [DividendOrPayout] = None, total: float = 0, prior: float = 0,
@@ -44,8 +44,7 @@ def dividend_performance(dividends_and_payouts: [DividendOrPayout] = None, total
         html.Div([
             html.Div([
                 html.Div('Dividend/Payout performance', className='uk-text-small'),
-                html.H2([f'R {total:,.2f}'.replace(',', ' ')],
-                        className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate'),
+                format_currency(total),
                 html.Div(['Compared to last month ', html.Span([
                     html.Span(['+' if total_difference > 0 else '']),
                     f'{total_difference:.2f}', '%'

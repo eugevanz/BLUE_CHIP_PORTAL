@@ -1,7 +1,7 @@
 from dash import html, dcc
 from shortnumbers import millify
 
-from utils import format_time, portfolio_fig, portfolio_df, custom_colours
+from utils import format_time, portfolio_fig, portfolio_df, custom_colours, format_currency
 
 
 def portfolio_performance(width_class: str = 'uk-width-1-3@m'):
@@ -9,8 +9,7 @@ def portfolio_performance(width_class: str = 'uk-width-1-3@m'):
         html.Div([
             html.Div([
                 html.Div('Portfolio Value', className='uk-text-small'),
-                html.H2([f'R {9657083.35:,.2f}'],
-                        className='uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate'),
+                format_currency(9657083.35),
                 html.Div(['Compared to last month ', html.Span('+24.17%', className='uk-text-success')],
                          className='uk-text-small uk-margin-remove-top')
             ], className='uk-card-header'),

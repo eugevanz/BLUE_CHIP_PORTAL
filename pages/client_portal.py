@@ -67,6 +67,5 @@ def layout(profile_id: str):
                                    prior=prior_investments_balance),
             transaction_performance(transactions=transactions, total=transactions_balance,
                                     prior=prior_transactions_balance)
-        ], **{'data-uk-grid': 'true'}, className='uk-child-width-1-3@m uk-grid-small uk-padding-small uk-grid-match '
-                                                 'uk-flex-right'),
+        ], **{'data-uk-grid': 'true'}, className='uk-child-width-1-3@m uk-grid-small uk-padding-small uk-grid-match'),
     ], style={'backgroundColor': '#88A9C3'})
