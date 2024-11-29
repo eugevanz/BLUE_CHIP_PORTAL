@@ -5,6 +5,7 @@ from components.admin_menu_card import admin_menu
 from components.asset_performance_card import asset_performance
 from components.client_insights_card import client_insights
 from components.market_performance_card import market_performance
+from components.navbar import navbar
 from components.performance_summary_card import performance_summary
 from components.portfolio_performance_card import portfolio_performance
 from utils import all_profile_data, supabase_admin
@@ -32,32 +33,26 @@ prior_investments_balance = data['prior_investments_balance']
 
 def layout(profile_id: str):
     return html.Div([
+        navbar([('Admin', f'/admin/{profile_id}/')]),
+
         html.Div([
             html.Div([
-                html.Img(
-                    src='https://oujdrprpkkwxeavzbaow.supabase.co/storage/v1/object/public/website_images'
-                        '/Blue%20Chip%20Invest%20Logo.001.png',
-                    width='60', height='60'),
-                html.Div(['BLUE CHIP INVESTMENTS'],
-                         style={'fontFamily': '"Noto Sans", sans-serif', 'fontOpticalSizing': 'auto',
-                                'fontWeight': '400', 'fontStyle': 'normal', 'lineHeight': '22px',
-                                'color': '#091235', 'width': '164px'})
-            ], className='uk-logo uk-flex')
-        ], className='uk-card uk-card-body'),
-        html.Div([
-            admin_menu(profile_id=profile_id, accounts=accounts, client_goals=client_goals,
-                       dividends_and_payouts=dividends_and_payouts, investments=investments,
-                       transactions=transactions),
-            market_performance(),
-            portfolio_performance(width_class='uk-width-1-4@m'),
-            asset_performance(),
-            performance_summary(accounts_balance, payouts_balance, client_goals_balance, transactions_balance,
-                                investments_balance, prior_accounts_balance, prior_payouts_balance,
-                                prior_client_goals_balance, prior_transactions_balance, prior_investments_balance),
-            client_insights(profiles_=profiles, prior_accounts_balance=prior_accounts_balance,
-                            accounts_balance=accounts_balance, accounts=accounts)
-        ], **{'data-uk-grid': 'true'},
-            className='uk-padding-small uk-child-width-1-4@m uk-grid-small uk-grid-match')
+                html.Div([
+                    admin_menu(profile_id=profile_id, accounts=accounts, client_goals=client_goals,
+                               dividends_and_payouts=dividends_and_payouts, investments=investments,
+                               transactions=transactions),
+                    market_performance(),
+                    performance_summary(accounts_balance, payouts_balance, client_goals_balance, transactions_balance,
+                                        investments_balance, prior_accounts_balance, prior_payouts_balance,
+                                        prior_client_goals_balance, prior_transactions_balance,
+                                        prior_investments_balance, width_class='uk-width-1-2@m'),
+                    portfolio_performance(width_class='uk-width-1-2@m'),
+                    asset_performance(width_class='uk-width-2-3@m'),
+                    client_insights(profiles_=profiles, prior_accounts_balance=prior_accounts_balance,
+                                    accounts_balance=accounts_balance, accounts=accounts, width_class='uk-width-1-3@m')
+                ], **{'data-uk-grid': 'true'}, className='uk-child-width-1-4@m uk-grid-small uk-grid-match')
+            ], className='uk-container')
+        ], className='uk-section')
     ], style={'backgroundColor': '#88A9C3'})
 
 

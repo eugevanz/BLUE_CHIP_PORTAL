@@ -10,7 +10,7 @@ def performance_summary(accounts_balance: float, payouts_balance: float, client_
                         transactions_balance: float, investments_balance: float, prior_accounts_balance: float,
                         prior_payouts_balance: float, prior_client_goals_balance: float,
                         prior_transactions_balance: float, prior_investments_balance: float,
-                        width_class: str = 'uk-width-1-4@m'):
+                        width_class: str = None):
     total = sum([accounts_balance, payouts_balance, client_goals_balance, transactions_balance, investments_balance])
     prior = sum([
         prior_accounts_balance, prior_payouts_balance, prior_client_goals_balance, prior_transactions_balance,
@@ -46,11 +46,13 @@ def performance_summary(accounts_balance: float, payouts_balance: float, client_
             html.Div([
                 html.Div(['Performance Summary'], className='uk-text-small'),
                 format_currency(total),
-                html.Div(['Compared to last month ', html.Span([
-                    html.Span(['+' if total_difference > 0 else '']),
-                    f'{total_difference:.2f}', '%'
-                ], className=f'uk-text-{"success" if total_difference > 0 else "danger"}')],
-                         className='uk-text-small uk-margin-remove-top')
+                html.Div([
+                    'Compared to last month ',
+                    html.Span([
+                        html.Span(['+' if total_difference > 0 else '']),
+                        f'{total_difference:.2f}', '%'
+                    ], className=f'uk-text-{"success" if total_difference > 0 else "danger"} uk-text-bolder')
+                ], className='uk-text-small uk-margin-remove-top')
             ], className='uk-card-header'),
             html.Div([
                 html.Div([
@@ -62,7 +64,8 @@ def performance_summary(accounts_balance: float, payouts_balance: float, client_
                         ], className='uk-flex uk-flex-column uk-height-medium', style={'fontSize': '8px'})
                     ], className='uk-width-auto'),
                     html.Div([
-                        dcc.Graph(figure=performance_fig, style={'height': '300px'}, config={'displayModeBar': False})
+                        dcc.Graph(figure=performance_fig, className='uk-height-medium',
+                                  config={'displayModeBar': False})
                     ])
                 ], **{'data-uk-grid': 'true'}, className='uk-grid-divider uk-child-width-expand uk-grid-small')
             ], className='uk-card-body'),
@@ -81,4 +84,4 @@ def performance_summary(accounts_balance: float, payouts_balance: float, client_
                 ], className='uk-flex uk-flex-wrap', style={'fontSize': '11px'})
             ], className='uk-card-footer')
         ], className='uk-card uk-card-default uk-light', style={'backgroundColor': '#2A3A58'})
-    ], className=width_class,id='performance-summary')
+    ], className=width_class, id='performance-summary')

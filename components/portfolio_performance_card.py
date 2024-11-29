@@ -4,14 +4,16 @@ from shortnumbers import millify
 from utils import format_time, portfolio_fig, portfolio_df, custom_colours, format_currency
 
 
-def portfolio_performance(width_class: str = 'uk-width-1-3@m'):
+def portfolio_performance(width_class: str = None):
     return html.Div([
         html.Div([
             html.Div([
                 html.Div('Portfolio Value', className='uk-text-small'),
                 format_currency(9657083.35),
-                html.Div(['Compared to last month ', html.Span('+24.17%', className='uk-text-success')],
-                         className='uk-text-small uk-margin-remove-top')
+                html.Div([
+                    'Compared to last month ',
+                    html.Span('+24.17%', className='uk-text-success uk-text-bolder')
+                ], className='uk-text-small uk-margin-remove-top')
             ], className='uk-card-header'),
             html.Div([
                 html.Div([
@@ -23,7 +25,7 @@ def portfolio_performance(width_class: str = 'uk-width-1-3@m'):
                         ], className='uk-flex uk-flex-column uk-height-medium', style={'fontSize': '8px'})
                     ], className='uk-width-auto'),
                     html.Div([
-                        dcc.Graph(figure=portfolio_fig, style={'height': '300px'}, config={'displayModeBar': False}),
+                        dcc.Graph(figure=portfolio_fig, className='uk-height-medium', config={'displayModeBar': False}),
                         html.Hr(),
                         html.Div([
                             html.Div([

@@ -120,7 +120,7 @@ current_month_start = datetime(datetime.now().year, datetime.now().month, 1)
 
 # Custom color palette
 custom_colours = ['#88A9C3', '#2b4257', '#fc8c3a', '#f7edb5', '#ffcd06', '#9acf97', '#4b8ea9', '#7f7f7f', '#bcbd22',
-                  '#17becf', '#aec7e8', '#899b98']
+                  '#17becf', '#aec7e8', '#899b98', '#9d0208']
 lighter_colours = ['#A6BFD4', '#4F677A', '#FCAE6E', '#FBF6D8', '#FFDA4E', '#B3D7B5', '#71A4BA', '#A8A8A8', '#D3D538',
                    '#63D8E4', '#D1E4F2', '#AAB7B4']
 fig_layout = {
@@ -276,6 +276,23 @@ def table_item_decorator(funct):
             return html.Div("An error occurred.", className='uk-alert uk-alert-danger')
 
     return wrapper
+
+
+def create_delete_item(type_id: str, item_id: str):
+    return html.Td([
+        html.A(**{'data-uk-icon': 'icon: trash; ratio: 0.8'}, className='uk-icon-button uk-text-danger'),
+        html.Div([
+            html.Div('Are you sure?', className='uk-card-body uk-text-center'),
+            html.Div([
+                html.Div([
+                    html.Button('Cancel', className='uk-button uk-button-primary uk-drop-close'),
+                    html.Button('Delete', className='uk-button uk-button-danger',
+                                id={'type': type_id, 'index': item_id})
+                ], **{'data-uk-margin': 'true'})
+            ], className='uk-card-footer')
+        ], className='uk-card uk-card-default',
+            **{'data-uk-dropdown': 'mode: click; pos: top-left; shift: false; flip: false'})
+    ])
 
 
 def create_table_header(columns, style=None):
@@ -443,8 +460,8 @@ def sign_out_button():
         html.A([
             html.Span(**{'data-uk-icon': 'icon: sign-out'}, className='uk-margin-small-right'),
             'Sign Out'
-        ], className='uk-flex uk-flex-middle uk-button uk-button-danger uk-margin-top uk-text-bolder',
-            style={'color': 'white'}, id='sign_out', n_clicks=0)
+        ], className='uk-flex uk-flex-middle uk-button uk-margin-top uk-text-bolder',
+            style={'color': 'white', 'backgroundColor': custom_colours[-1]}, id='sign_out', n_clicks=0)
     )
 
 
@@ -495,71 +512,73 @@ def precision_financial_tools():
 
 def all_profile_data():
     with Session(engine) as session:
-        profiles = session.query(Profile).all()
+        # Fetch all client profiles
+        profiles = session.scalars(
+            select(Profile).where(Profile.profile_type == 'client')
+        ).all()
 
-        # Accounts
-        accounts = session.scalars(select(Account).order_by(Account.updated_at.desc())).all()
-        accounts_balance = sum(account.balance for account in accounts) if accounts else 0
-        accounts_balance_prior_current_month = session.query(func.sum(Account.balance)).filter(
-            Account.created_at < current_month_start
-        ).scalar() or 0  # Default to 0 if None
+        # Fetch all accounts and calculate balances
+        accounts = session.scalars(
+            select(Account).order_by(Account.updated_at.desc())
+        ).all()
+        accounts_balance = sum(account.balance for account in accounts)
+        prior_accounts_balance = session.query(
+            func.sum(Account.balance)
+        ).filter(Account.created_at < current_month_start).scalar() or 0
 
-        # Dividends and Payouts
+        # Fetch all dividends and payouts and calculate balances
+        account_ids = [account.id for account in accounts]
         dividends_and_payouts = session.scalars(
-            select(DividendOrPayout).where(DividendOrPayout.account_id.in_([account.id for account in accounts]))
-        ).all() if accounts else []
-        payouts_balance = sum(payout.amount for payout in dividends_and_payouts) if dividends_and_payouts else 0
-        dividends_and_payouts_amount_prior_current_month = session.query(
-            func.sum(DividendOrPayout.amount)).filter(
-            DividendOrPayout.created_at < current_month_start
-        ).scalar() or 0  # Default to 0 if None
+            select(DividendOrPayout).where(DividendOrPayout.account_id.in_(account_ids))
+        ).all() if account_ids else []
+        payouts_balance = sum(payout.amount for payout in dividends_and_payouts)
+        prior_payouts_balance = session.query(
+            func.sum(DividendOrPayout.amount)
+        ).filter(DividendOrPayout.created_at < current_month_start).scalar() or 0
 
-        # Client Goals
+        # Fetch all client goals and calculate balances
         client_goals = session.scalars(select(ClientGoal)).all()
-        client_goals_balance = sum(goal.current_savings for goal in client_goals) if client_goals else 0
-        client_goals_current_savings_prior_current_month = session.query(
-            func.sum(ClientGoal.current_savings)).filter(
-            ClientGoal.created_at < current_month_start
-        ).scalar() or 0  # Default to 0 if None
+        client_goals_balance = sum(goal.current_savings for goal in client_goals)
+        prior_client_goals_balance = session.query(
+            func.sum(ClientGoal.current_savings)
+        ).filter(ClientGoal.created_at < current_month_start).scalar() or 0
 
-        # Transactions
-        transactions = session.scalars(select(Transaction).where(
-            Transaction.account_id.in_([account.id for account in accounts])
-        )).all() if accounts else []
-        transactions_balance = sum(transaction.amount for transaction in transactions) if transactions else 0
-        transactions_amount_prior_current_month = session.query(
-            func.sum(Transaction.amount)).filter(
-            Transaction.created_at < current_month_start
-        ).scalar() or 0  # Default to 0 if None
+        # Fetch all transactions and calculate balances
+        transactions = session.scalars(
+            select(Transaction).where(Transaction.account_id.in_(account_ids))
+        ).all() if account_ids else []
+        transactions_balance = sum(transaction.amount for transaction in transactions)
+        prior_transactions_balance = session.query(
+            func.sum(Transaction.amount)
+        ).filter(Transaction.created_at < current_month_start).scalar() or 0
 
-        # Investments
-        investments = session.scalars(select(Investment).where(
-            Investment.account_id.in_([account.id for account in accounts])
-        )).all() if accounts else []
-        investments_balance = sum(investment.current_price for investment in investments) if investments else 0
-        investments_current_price_prior_current_month = session.query(
-            func.sum(Investment.current_price)).filter(
-            Investment.created_at < current_month_start
-        ).scalar() or 0  # Default to 0 if None
+        # Fetch all investments and calculate balances
+        investments = session.scalars(
+            select(Investment).where(Investment.account_id.in_(account_ids))
+        ).all() if account_ids else []
+        investments_balance = sum(investment.current_price for investment in investments)
+        prior_investments_balance = session.query(
+            func.sum(Investment.current_price)
+        ).filter(Investment.created_at < current_month_start).scalar() or 0
 
-        return dict(
-            profiles=profiles,
-            accounts=accounts,
-            accounts_balance=accounts_balance,
-            prior_accounts_balance=accounts_balance_prior_current_month,
-            dividends_and_payouts=dividends_and_payouts,
-            payouts_balance=payouts_balance,
-            prior_payouts_balance=dividends_and_payouts_amount_prior_current_month,
-            client_goals=client_goals,
-            client_goals_balance=client_goals_balance,
-            prior_client_goals_balance=client_goals_current_savings_prior_current_month,
-            transactions=transactions,
-            transactions_balance=transactions_balance,
-            prior_transactions_balance=transactions_amount_prior_current_month,
-            investments=investments,
-            investments_balance=investments_balance,
-            prior_investments_balance=investments_current_price_prior_current_month
-        )
+        return {
+            "profiles": profiles,
+            "accounts": accounts,
+            "accounts_balance": accounts_balance,
+            "prior_accounts_balance": prior_accounts_balance,
+            "dividends_and_payouts": dividends_and_payouts,
+            "payouts_balance": payouts_balance,
+            "prior_payouts_balance": prior_payouts_balance,
+            "client_goals": client_goals,
+            "client_goals_balance": client_goals_balance,
+            "prior_client_goals_balance": prior_client_goals_balance,
+            "transactions": transactions,
+            "transactions_balance": transactions_balance,
+            "prior_transactions_balance": prior_transactions_balance,
+            "investments": investments,
+            "investments_balance": investments_balance,
+            "prior_investments_balance": prior_investments_balance,
+        }
 
 
 def profile_data(profile_id: str):

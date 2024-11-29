@@ -5,7 +5,8 @@ from dash import html, dcc
 from utils import format_currency
 
 
-def client_insights(profiles_, accounts, prior_accounts_balance=0, accounts_balance=0):
+def client_insights(profiles_, accounts, prior_accounts_balance=0, accounts_balance=0,
+                    width_class: str = None):
     """Generate the Client Insights card layout."""
 
     # Calculate aggregated account balances
@@ -32,7 +33,7 @@ def client_insights(profiles_, accounts, prior_accounts_balance=0, accounts_bala
                     html.Span([
                         html.Span(['+' if total_difference > 0 else '']),
                         f'{total_difference:.2f}'.replace(',', ' '), '%'
-                    ], className=f'uk-text-{"success" if total_difference > 0 else "danger"}')
+                    ], className=f'uk-text-{"success" if total_difference > 0 else "danger"} uk-text-bolder')
                 ], className='uk-text-small uk-margin-remove-top')
             ], className='uk-card-header'),
             # Card body: Profile table
@@ -44,7 +45,7 @@ def client_insights(profiles_, accounts, prior_accounts_balance=0, accounts_bala
                             html.Tr([
                                 # Client details
                                 html.Td([
-                                    html.Div([
+                                    html.A([
                                         html.Div(
                                             html.Img(
                                                 className='uk-border-circle', width='60', height='60',
@@ -58,28 +59,18 @@ def client_insights(profiles_, accounts, prior_accounts_balance=0, accounts_bala
                                             html.H3([
                                                 html.Span(client.first_name or 'First name',
                                                           className='uk-text-bolder'),
-                                                html.Span(' '),
+                                                html.Br(),
                                                 client.last_name or 'Last name'
-                                            ], className='uk-card-title uk-margin-remove-bottom',
-                                                style={'color': 'white'}),
-                                            html.Div(client.email or 'No email provided', style={'fontSize': '11px'}),
-                                            html.P([
-                                                'Last active ',
-                                                html.Span(client.created_at.strftime('%B %d, %Y'),
-                                                          className='uk-text-default uk-text-bolder uk-margin-small-left')
-                                            ], className='uk-text-meta uk-margin-remove-top')
+                                            ], className='uk-card-title uk-margin-remove-bottom'),
+                                            html.Div(client.email or 'No email provided', style={'fontSize': '11px'})
                                         ], className='uk-width-expand')
-                                    ], className='uk-grid-small uk-flex-middle', **{'data-uk-grid': 'true'})
-                                ], className='uk-flex uk-flex-middle uk-flex-between'),
-                                # Edit button
-                                html.Td([
-                                    html.A(href=f'/edit/{str(client.id)}/', **{'data-uk-icon': 'icon: pencil'},
-                                           className='uk-icon-button')
-                                ])
+                                    ], className='uk-grid-small uk-link-reset',
+                                        **{'data-uk-grid': 'true'}, href=f'/edit/{str(client.id)}/')
+                                ], className='uk-flex uk-flex-middle uk-flex-between uk-margin-left uk-margin-right')
                             ], className='uk-animation-fade') for client in profiles_
                         ]) if profiles_ else None  # Show table rows if profiles exist
                     ], className='uk-table uk-table-middle uk-table-divider uk-table-hover')
-                ], className='uk-overflow-auto uk-height-max-large')
+                ], **{'data-uk-overflow-auto': 'true'}, className='uk-height-large')
             ], className='uk-card-body uk-padding-remove'),
             html.Div([
                 html.Form([
@@ -87,5 +78,5 @@ def client_insights(profiles_, accounts, prior_accounts_balance=0, accounts_bala
                     dcc.Input(id='client-search', type='search', placeholder='Search', className='uk-search-input'),
                 ], className='uk-search uk-search-default uk-width-1-1'),
             ], className='uk-card-footer')
-        ], className='uk-card uk-card-default uk-light', style={'backgroundColor': '#2A3A58'})
-    ], className='uk-width-1-4@m', id='client-insights')
+        ], className='uk-card uk-card-default')
+    ], className=width_class, id='client-insights')

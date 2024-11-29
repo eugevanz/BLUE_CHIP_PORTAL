@@ -48,7 +48,7 @@ def dividend_performance(dividends_and_payouts: [DividendOrPayout] = None, total
                 html.Div(['Compared to last month ', html.Span([
                     html.Span(['+' if total_difference > 0 else '']),
                     f'{total_difference:.2f}', '%'
-                ], className=f'uk-text-{"success" if total_difference > 0 else "danger"}')],
+                ], className=f'uk-text-{"success" if total_difference > 0 else "danger"} uk-text-bolder')],
                          className='uk-text-small uk-margin-remove-top')
             ], className='uk-card-header'),
             html.Div([

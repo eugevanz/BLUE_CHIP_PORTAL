@@ -34,7 +34,7 @@ def transaction_performance(transactions: [Transaction] = None, total: float = 0
                 html.Div(['Compared to last month ', html.Span([
                     html.Span(['+' if total_difference > 0 else '']),
                     f'{total_difference:.2f}', '%'
-                ], className=f'uk-text-{"success" if total_difference > 0 else "danger"}')],
+                ], className=f'uk-text-{"success" if total_difference > 0 else "danger"} uk-text-bolder')],
                          className='uk-text-small uk-margin-remove-top')
             ], className='uk-card-header'),
             html.Div([
@@ -52,13 +52,12 @@ def transaction_performance(transactions: [Transaction] = None, total: float = 0
                                 ], className='uk-margin-small-left')
                             ], className='uk-flex uk-flex-middle uk-margin-right') for i, item in
                             enumerate(list(transact_df.itertuples(index=False, name=None)))
-                        ], className='uk-flex uk-flex-column uk-height-small',
-                            style={'fontSize': '8px'})
+                        ], className='uk-flex uk-flex-column uk-height-small',style={'fontSize': '8px'})
                     ], className='uk-width-auto'),
-                    html.Div(
-                        [dcc.Graph(figure=transact_fig, style={'height': '150px'}, config={'displayModeBar': False})])
-                ], **{'data-uk-grid': 'true'},
-                    className='uk-grid-divider uk-child-width-expand uk-grid-small')
+                    html.Div([
+                        dcc.Graph(figure=transact_fig, style={'height': '150px'}, config={'displayModeBar': False})
+                    ])
+                ], **{'data-uk-grid': 'true'}, className='uk-grid-divider uk-child-width-expand uk-grid-small')
             ], className='uk-card-body')
         ], className='uk-card uk-card-default')
     ], className=order)
