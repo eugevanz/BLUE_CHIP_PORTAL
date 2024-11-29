@@ -64,8 +64,10 @@ def navbar(paths: list):
             html.Div([
                 html.Nav([
                     html.Ul([
-                        html.Li([html.A([title], href=href)]) for title, href in paths
-                    ], className='uk-breadcrumb uk-light')
+                        html.Li([
+                            html.A([title], href=href) if index < len(paths) - 1 else html.Span([title])
+                        ]) for index, (title, href) in enumerate(paths)
+                    ], className='uk-breadcrumb')
                 ])
             ], className='uk-width-1-1')
         ], className='uk-container')

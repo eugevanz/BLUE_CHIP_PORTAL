@@ -1,9 +1,8 @@
 import dash
-from dash import Dash, dcc, callback, Output, Input, html
+from dash import Dash, dcc, callback, Output, Input
 from dash.html import Div
 from sqlalchemy.orm import Session
 
-from components.footer_section import footer
 from components.navbar import navbar
 from utils import supabase, engine
 
@@ -30,8 +29,7 @@ app.layout = Div([
     dcc.Location(id='url'),
     dcc.Store(id='access_token', storage_type='session'),
     dcc.Store(id='profile-id-store'),
-    dash.page_container,
-    html.Div([footer()], id='footer-container')
+    dcc.Loading([dash.page_container], id='page-loading', type='circle', fullscreen=True)
 ])
 
 

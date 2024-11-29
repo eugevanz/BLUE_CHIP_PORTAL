@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from components.accounts_table_card import accounts_table
 from components.client_goals_table_card import client_goals_table
 from components.client_profile_card import client_profile
+from components.footer_section import footer
 from components.investments_table_card import investments_table
 from components.navbar import navbar
 from components.payouts_table_card import payouts_table
@@ -44,7 +45,7 @@ def layout(profile_id: str):
     return html.Div([
         dcc.Location(id='edit-url'),
         dcc.Store('profile-id-store', data=profile_id),
-        navbar([('Admin', f'/admin/{profile_id}/'), ('Edit Account', f'/edit/{profile_id}/')]),
+        navbar([('Admin', f'/admin/{profile_id}/'), (f'Edit Profile ({profile.email})', '')]),
         html.Div([
             html.Div([
                 html.Div([
@@ -56,7 +57,8 @@ def layout(profile_id: str):
                     payouts_table(dividends_and_payouts, profile_id, payouts_balance, prior_payouts_balance)
                 ], className='uk-child-width-1-2@m uk-padding-small uk-grid-small', **{'data-uk-grid': 'true'})
             ], className='uk-container')
-        ], className='uk-section')
+        ], className='uk-section'),
+        footer()
     ], style={'backgroundColor': '#88A9C3'})
 
 

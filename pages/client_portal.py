@@ -5,6 +5,7 @@ from components.account_performance_card import account_performance
 from components.client_goal_performance_card import client_goal_performance
 from components.client_menu_card import client_menu
 from components.dividend_performance_card import dividend_performance
+from components.footer_section import footer
 from components.investment_performance_card import investment_performance
 from components.market_performance_card import market_performance
 from components.performance_summary_card import performance_summary
@@ -68,4 +69,5 @@ def layout(profile_id: str):
             transaction_performance(transactions=transactions, total=transactions_balance,
                                     prior=prior_transactions_balance)
         ], **{'data-uk-grid': 'true'}, className='uk-child-width-1-3@m uk-grid-small uk-padding-small uk-grid-match'),
+        footer()
     ], style={'backgroundColor': '#88A9C3'})

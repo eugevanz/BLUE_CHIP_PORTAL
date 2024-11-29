@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from components.account_performance_card import account_performance
 from components.client_goal_performance_card import client_goal_performance
 from components.dividend_performance_card import dividend_performance
+from components.footer_section import footer
 from components.investment_performance_card import investment_performance
 from components.navbar import navbar
 from components.transaction_performance_card import transaction_performance
@@ -35,24 +36,13 @@ def layout(profile_id: str):
     prior_investments_balance = data['prior_investments_balance']
 
     return html.Div([
+        dcc.Location(id='goal-url'),
+        dcc.Store(id='profile-id-store', data=profile_id),
+        navbar([
+            ('Admin', f'/admin/{profile_id}/'), (f'Edit Profile ({profile.email})', f'/edit/{profile_id}/'),
+            ('Add Client Goal', '')
+        ]),
         html.Div([
-            html.Div([
-                html.Div([
-                    html.Img(
-                        src='https://oujdrprpkkwxeavzbaow.supabase.co/storage/v1/object/public/website_images'
-                            '/Blue%20Chip%20Invest%20Logo.001.png',
-                        width='60', height='60'),
-                    html.Div(['BLUE CHIP INVESTMENTS'],
-                             style={'fontFamily': '"Noto Sans", sans-serif', 'fontOpticalSizing': 'auto',
-                                    'fontWeight': '400', 'fontStyle': 'normal', 'lineHeight': '22px',
-                                    'color': '#091235', 'width': '164px'})
-                ], className='uk-logo uk-flex'),
-                html.Div([f'Add Client Goal / {profile.email}'])
-            ], className='uk-grid-large uk-flex-bottom uk-padding-small', **{'data-uk-grid': 'true'})
-        ], className='uk-card uk-card-body'),
-        html.Div([
-            dcc.Location(id='goal-url'),
-            dcc.Store(id='profile-id-store', data=profile_id),
             html.Div([
                 html.Div([
                     html.Div([
@@ -130,7 +120,8 @@ def layout(profile_id: str):
 
                 ], **{'data-uk-grid': 'masonry: pack'}, className='uk-child-width-1-2@m')
             ], className='uk-container')
-        ], className='uk-section')
+        ], className='uk-section'),
+    footer(is_light=False)
     ])
 
 

@@ -4,6 +4,7 @@ from dash import html, callback, Output, Input, State
 from components.admin_menu_card import admin_menu
 from components.asset_performance_card import asset_performance
 from components.client_insights_card import client_insights
+from components.footer_section import footer
 from components.market_performance_card import market_performance
 from components.navbar import navbar
 from components.performance_summary_card import performance_summary
@@ -33,7 +34,7 @@ prior_investments_balance = data['prior_investments_balance']
 
 def layout(profile_id: str):
     return html.Div([
-        navbar([('Admin', f'/admin/{profile_id}/')]),
+        navbar([('Admin', '')]),
 
         html.Div([
             html.Div([
@@ -52,7 +53,8 @@ def layout(profile_id: str):
                                     accounts_balance=accounts_balance, accounts=accounts, width_class='uk-width-1-3@m')
                 ], **{'data-uk-grid': 'true'}, className='uk-child-width-1-4@m uk-grid-small uk-grid-match')
             ], className='uk-container')
-        ], className='uk-section')
+        ], className='uk-section'),
+        footer()
     ], style={'backgroundColor': '#88A9C3'})
 
 

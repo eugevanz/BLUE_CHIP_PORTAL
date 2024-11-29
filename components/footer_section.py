@@ -1,7 +1,7 @@
 from dash import html
 
 
-def footer():
+def footer(is_light: bool = True):
     return html.Div([
         html.Div([
             html.Hr(),
@@ -17,7 +17,7 @@ def footer():
                     html.Div([
                         html.Div([
                             'Our Services'
-                        ], className='uk-text-bolder uk-text-large uk-margin-small-bottom', style={'color': '#88A9C3'}),
+                        ], className='uk-text-bolder uk-text-large uk-margin-small-bottom'),
                         html.Ul([
                             html.Li(html.A('Financial Planning', href='#')),
                             html.Li(html.A('Investment Management', href='#')),
@@ -31,7 +31,7 @@ def footer():
                     html.Div([
                         html.Div([
                             'Explore'
-                        ], className='uk-text-bolder uk-text-large uk-margin-small-bottom', style={'color': '#88A9C3'}),
+                        ], className='uk-text-bolder uk-text-large uk-margin-small-bottom'),
                         html.Ul([
                             html.Li(html.A('About', href='#')),
                             html.Li(html.A('Services', href='#')),
@@ -45,61 +45,46 @@ def footer():
                     html.Div([
                         html.Div([
                             "Let's Talk"
-                        ], className='uk-text-bolder uk-text-large uk-margin-small-bottom', style={'color': '#88A9C3'}),
+                        ], className='uk-text-bolder uk-text-large uk-margin-small-bottom'),
                         html.P([
                             'We\'re Here to Help You Grow Your Wealth, Plan Your Future, and Achieve Your Financial '
                             'Goals'
-                        ], className='uk-text-small uk-light'),
+                        ], className='uk-text-small'),
                         html.Button([
                             'Start'
-                        ], className='uk-button uk-light uk-text-bolder',
-                            style={'backgroundColor': '#88A9C3', 'color': '#091235'})
+                        ], className='uk-button uk-text-bolder',
+                            style={'backgroundColor': '#091235', 'color': '#88A9C3'})
                     ], className='uk-card uk-card-body')
-                ])
-            ], **{'data-uk-grid': 'true'}, className='uk-child-width-1-2 uk-child-width-1-3@l'),
+                ]),
+                html.Div([
+                    html.Div([
+                        html.Div([
+                            'Contact Us'
+                        ], className='uk-text-bolder uk-text-large uk-margin-small-bottom'),
+                        html.P([
+                            html.Span(**{'data-uk-icon': 'icon: location'}, className='uk-icon uk-margin-small-right'),
+                            'Unit 17, No.30 Surprise Road, Pinetown, 3610'
+                        ], className='uk-text-small'),
+                        html.P([
+                            html.Span(**{'data-uk-icon': 'icon: receiver'}, className='uk-icon uk-margin-small-right'),
+                            '0860 258 2447'
+                        ], className='uk-text-small'),
+                        html.P([
+                            html.Span(**{'data-uk-icon': 'icon: mail'}, className='uk-icon uk-margin-small-right'),
+                            'info@bluechipinvest.co.za'
+                        ], className='uk-text-small')
+                    ], className='uk-card uk-card-body')
+                ], className='uk-width-expand')
+            ], **{'data-uk-grid': 'true'}, className='uk-child-width-1-2 uk-child-width-1-4@m'),
             html.Div([
                 html.Div([
                     html.Div([
-                        html.Div(**{'data-uk-icon': 'icon: location; ratio: 1.8'}, className='uk-icon',
-                                 style={'color': '#88A9C3'}),
-                        html.Div(['Location'], className='uk-text-large uk-text-bolder uk-light'),
-                        html.Div([
-                            'Unit 17, No.30 Surprise Road, Pinetown, 3610'
-                        ], className='uk-text-small uk-light'),
-                    ], className='uk-card uk-card-body')
-                ]),
-                html.Div([
-                    html.Div([
-                        html.Div(**{'data-uk-icon': 'icon: receiver; ratio: 1.8'}, className='uk-icon'),
-                        html.Div(['Phone'], className='uk-text-large uk-text-bolder uk-light'),
-                        html.Div(['0860 258 2447'], className='uk-text-small uk-light')
-                    ], className='uk-card uk-card-body')
-                ]),
-                html.Div([
-                    html.Div([
-                        html.Div(**{'data-uk-icon': 'icon: mail; ratio: 1.8'}, className='uk-icon'),
-                        html.Div(['Email'], className='uk-text-large uk-text-bolder'),
-                        html.Div(['info@', html.Br(), 'bluechipinvest.co.za'], className='uk-text-small')
-                    ], className='uk-card uk-card-body')
-                ]),
-                html.Div([
-                    html.Div([
-                        html.Div(
-                            **{'data-uk-icon': 'icon: social; ratio: 1.8'},
-                            className='uk-icon'
-                        ),
-                        html.Div('Social', className='uk-text-large uk-text-bolder',
-                                 style={'marginBottom': '4px'}),
-                        html.Div([
-                            html.Div([
-                                html.Span(**{'data-uk-icon': 'icon: facebook'}, className='uk-icon-button uk-icon'),
-                                html.Span(**{'data-uk-icon': 'icon: linkedin'}, className='uk-icon-button uk-icon'),
-                                html.Span(**{'data-uk-icon': 'icon: instagram'}, className='uk-icon-button uk-icon'),
-                                html.Span(**{'data-uk-icon': 'icon: x'}, className='uk-icon-button uk-icon')
-                            ], **{'data-uk-grid': 'true'}, className='uk-grid-small uk-child-width-auto')
-                        ], className='uk-grid-small')
-                    ], className='uk-card uk-card-body')
-                ])
-            ], **{'data-uk-grid': 'true'}, className='uk-child-width-1-2 uk-child-width-1-4@l')
+                        html.Span(**{'data-uk-icon': 'icon: facebook'}, className='uk-icon-button uk-icon'),
+                        html.Span(**{'data-uk-icon': 'icon: linkedin'}, className='uk-icon-button uk-icon'),
+                        html.Span(**{'data-uk-icon': 'icon: instagram'}, className='uk-icon-button uk-icon'),
+                        html.Span(**{'data-uk-icon': 'icon: x'}, className='uk-icon-button uk-icon')
+                    ], **{'data-uk-grid': 'true'}, className='uk-grid-small uk-child-width-auto')
+                ], className='uk-grid-small')
+            ], className='uk-card uk-card-body')
         ], className='uk-container')
-    ], className='uk-section uk-section-large uk-light', style={'backgroundColor': '#2A3A58'})
+    ], className=f'uk-section uk-section-large {"uk-light" if is_light else ""}')
