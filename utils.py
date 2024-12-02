@@ -119,10 +119,10 @@ format_time = lambda x: x.strftime('%b %d, %Y')
 current_month_start = datetime(datetime.now().year, datetime.now().month, 1)
 
 # Custom color palette
-custom_colours = ['#88A9C3', '#2b4257', '#fc8c3a', '#f7edb5', '#ffcd06', '#9acf97', '#4b8ea9', '#7f7f7f', '#bcbd22',
-                  '#17becf', '#aec7e8', '#899b98', '#9d0208']
-lighter_colours = ['#A6BFD4', '#4F677A', '#FCAE6E', '#FBF6D8', '#FFDA4E', '#B3D7B5', '#71A4BA', '#A8A8A8', '#D3D538',
-                   '#63D8E4', '#D1E4F2', '#AAB7B4']
+custom_colours = ['#88A9C3', '#091235', '#FC8C3A', '#F7EDB5', '#FFCD06', '#9ACF97', '#4B8EA9', '#7F7F7F', '#BCBD22',
+                  '#17BECF', '#AEC7E8', '#899B98', '#9D0208', '#28282B']
+lighter_colours = ['#ACC3D5', '#535972', '#FDAE75', '#F9F2CB', '#FFDC51', '#B8DDB6', '#81B0C3', '#A5A5A5', '#D0D164',
+                   '#5DD2DD', '#C6D8EF', '#ACB9B7', '#BA4E52', '#68686B']
 fig_layout = {
     'xaxis': {'showticklabels': False, 'visible': False},
     'yaxis': {'showticklabels': False, 'visible': False},
@@ -461,7 +461,7 @@ def sign_out_button():
             html.Span(**{'data-uk-icon': 'icon: sign-out'}, className='uk-margin-small-right'),
             'Sign Out'
         ], className='uk-flex uk-flex-middle uk-button uk-margin-top uk-text-bolder',
-            style={'color': 'white', 'backgroundColor': custom_colours[-1]}, id='sign_out', n_clicks=0)
+            style={'color': 'white', 'backgroundColor': custom_colours[-2]}, id='sign_out', n_clicks=0)
     )
 
 

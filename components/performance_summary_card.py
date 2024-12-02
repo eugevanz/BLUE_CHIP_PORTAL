@@ -65,7 +65,9 @@ def performance_summary(accounts_balance: float, payouts_balance: float, client_
                     ], className='uk-width-auto'),
                     html.Div([
                         dcc.Graph(figure=performance_fig, className='uk-height-medium',
-                                  config={'displayModeBar': False})
+                                  config={'displayModeBar': False}),
+                        html.Hr(),
+                        html.Div(['Over the lifetime of the portfolio'], style={'fontSize': '8px'})
                     ])
                 ], **{'data-uk-grid': 'true'}, className='uk-grid-divider uk-child-width-expand uk-grid-small')
             ], className='uk-card-body'),
@@ -83,5 +85,5 @@ def performance_summary(accounts_balance: float, payouts_balance: float, client_
                     [(i, row[0], row[1]) for i, row in enumerate(performance_df.itertuples(index=False, name=None))]
                 ], className='uk-flex uk-flex-wrap', style={'fontSize': '11px'})
             ], className='uk-card-footer')
-        ], className='uk-card uk-card-default uk-light', style={'backgroundColor': '#2A3A58'})
+        ], className='uk-card uk-card-default', style={'backgroundColor': custom_colours[-1]})
     ], className=width_class, id='performance-summary')

@@ -1,6 +1,6 @@
 from dash import html
 
-from utils import DividendOrPayout, format_currency, create_delete_item, format_time
+from utils import DividendOrPayout, format_currency, create_delete_item, format_time, custom_colours
 
 
 def payouts_table(dividends_and_payouts: [DividendOrPayout], profile_id: str, payouts_balance: float,
@@ -56,5 +56,5 @@ def payouts_table(dividends_and_payouts: [DividendOrPayout], profile_id: str, pa
                     href=f'/add-payout/{profile_id}/'),
                 className='uk-card-footer'
             )
-        ], className='uk-card uk-card-default uk-light', style={'backgroundColor': '#2A3A58'})
+        ], className='uk-card uk-card-default uk-light', style={'backgroundColor': custom_colours[-1]})
     ])

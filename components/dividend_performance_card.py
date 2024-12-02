@@ -1,13 +1,13 @@
 import pandas as pd
+import plotly.express as px
 from dash import html, dcc
 from shortnumbers import millify
-import plotly.express as px
 
 from utils import format_time, custom_colours, fig_layout, DividendOrPayout, format_currency
 
 
 def dividend_performance(dividends_and_payouts: [DividendOrPayout] = None, total: float = 0, prior: float = 0,
-                         order: str = None):
+                         order: str = None, dark: bool = True):
     lowest_payout, highest_payout, mid_payout = 0, 0, 0
     oldest_date, latest_date, mid_date = None, None, None
     payouts_fig = None
@@ -26,8 +26,8 @@ def dividend_performance(dividends_and_payouts: [DividendOrPayout] = None, total
             mid_date = sorted_payouts[len(sorted_payouts) // 2].payment_date
 
         payouts_df = pd.DataFrame({
-            'Date': [payout.payment_date for payout in dividends_and_payouts],
-            'Amount': [payout.amount for payout in dividends_and_payouts]
+            'Date': [payout.payment_date for payout in sorted_payouts],
+            'Amount': [payout.amount for payout in sorted_payouts]
         })
         payouts_df['Date'] = pd.to_datetime(payouts_df['Date'])
         payouts_fig = px.line(payouts_df, x='Date', y='Amount', markers=True, line_shape='spline')
@@ -69,5 +69,5 @@ def dividend_performance(dividends_and_payouts: [DividendOrPayout] = None, total
                     ])
                 ], **{'data-uk-grid': 'true'}, className='uk-grid-divider uk-child-width-expand uk-grid-small')
             ], className='uk-card-body')
-        ], className='uk-card uk-card-default')
+        ], className='uk-card uk-card-default', style={'backgroundColor': custom_colours[-1]} if dark else {})
     ], className=order)

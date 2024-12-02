@@ -1,6 +1,8 @@
 import yfinance as yf
 from dash import html
 
+from utils import custom_colours
+
 
 def get_symbol_data(symbol, is_commodity=False):
     current_price = yf.Ticker(symbol).info.get('previousClose' if is_commodity else 'currentPrice')
@@ -35,7 +37,7 @@ def navbar(paths: list):
                                  style={'fontFamily': '"Noto Sans", sans-serif',
                                         'fontOpticalSizing': 'auto',
                                         'fontWeight': '400', 'fontStyle': 'normal', 'lineHeight': '22px',
-                                        'color': '#091235', 'width': '164px'})
+                                        'color': custom_colours[0], 'width': '164px'})
                     ], className='uk-logo uk-flex')
                 ], className='uk-width-auto'),
                 html.Div([
@@ -56,7 +58,7 @@ def navbar(paths: list):
                             ]) for ticker in tickers
                         ], className='uk-slider-items uk-child-width-1-2 uk-child-width-1-4@s '
                                      'uk-child-width-1-6@m uk-grid')
-                    ], **{'data-uk-slider': 'autoplay: true'})
+                    ], **{'data-uk-slider': 'autoplay: true; autoplay-interval: 3000'})
                 ], className='uk-width-expand')
             ], **{'data-uk-grid': 'true'},
                 className='uk-grid-medium uk-flex-middle uk-child-width-1-2@m'),

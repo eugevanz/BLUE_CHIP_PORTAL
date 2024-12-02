@@ -57,9 +57,9 @@ def layout(profile_id: str):
                     payouts_table(dividends_and_payouts, profile_id, payouts_balance, prior_payouts_balance)
                 ], className='uk-child-width-1-2@m uk-padding-small uk-grid-small', **{'data-uk-grid': 'true'})
             ], className='uk-container')
-        ], className='uk-section'),
+        ], className='uk-section uk-section-small'),
         footer()
-    ], style={'backgroundColor': '#88A9C3'})
+    ], className='uk-background-secondary')
 
 
 @callback(

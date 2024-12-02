@@ -5,7 +5,8 @@ from dash import html, dcc
 from utils import Transaction, custom_colours, fig_layout, format_currency
 
 
-def transaction_performance(transactions: [Transaction] = None, total: float = 0, prior: float = 0, order: str = None):
+def transaction_performance(transactions: [Transaction] = None, total: float = 0, prior: float = 0, order: str =
+None, dark: bool = True):
     transact_fig, transact_df = None, None
 
     if transactions:
@@ -52,12 +53,12 @@ def transaction_performance(transactions: [Transaction] = None, total: float = 0
                                 ], className='uk-margin-small-left')
                             ], className='uk-flex uk-flex-middle uk-margin-right') for i, item in
                             enumerate(list(transact_df.itertuples(index=False, name=None)))
-                        ], className='uk-flex uk-flex-column uk-height-small',style={'fontSize': '8px'})
+                        ], className='uk-flex uk-flex-column uk-height-small', style={'fontSize': '8px'})
                     ], className='uk-width-auto'),
                     html.Div([
                         dcc.Graph(figure=transact_fig, style={'height': '150px'}, config={'displayModeBar': False})
                     ])
                 ], **{'data-uk-grid': 'true'}, className='uk-grid-divider uk-child-width-expand uk-grid-small')
             ], className='uk-card-body')
-        ], className='uk-card uk-card-default')
+        ], className='uk-card uk-card-default', style={'backgroundColor': custom_colours[-1]} if dark else {})
     ], className=order)

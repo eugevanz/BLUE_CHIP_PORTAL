@@ -24,6 +24,7 @@ app = Dash(
 server = app.server
 
 app.config.suppress_callback_exceptions = True
+app._favicon = 'favico.ico'
 
 app.layout = Div([
     dcc.Location(id='url'),

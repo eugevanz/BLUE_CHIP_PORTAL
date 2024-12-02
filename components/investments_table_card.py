@@ -1,6 +1,6 @@
 from dash import html
 
-from utils import create_delete_item, format_time, Investment, format_currency
+from utils import create_delete_item, format_time, Investment, format_currency, custom_colours
 
 
 def investments_table(investments: [Investment], profile_id: str, investments_balance: float,
@@ -63,5 +63,5 @@ def investments_table(investments: [Investment], profile_id: str, investments_ba
                     href=f'/add-investment/{profile_id}/'),
                 className='uk-card-footer'
             )
-        ], className='uk-card uk-card-default uk-light', style={'backgroundColor': '#2A3A58'})
+        ], className='uk-card uk-card-default uk-light', style={'backgroundColor': custom_colours[-1]})
     ], className='uk-flex uk-flex-column uk-height-1-1')

@@ -36,5 +36,5 @@ def asset_performance(width_class: str = None):
                     ])
                 ], **{'data-uk-grid': 'true'}, className='uk-grid-divider uk-child-width-expand uk-grid-small')
             ], className='uk-card-body'),
-        ], className='uk-card uk-card-default uk-light', style={'backgroundColor': '#2A3A58'})
+        ], className='uk-card uk-card-default', style={'backgroundColor': custom_colours[-1]})
     ], className=width_class)

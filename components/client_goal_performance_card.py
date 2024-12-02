@@ -6,7 +6,8 @@ from shortnumbers import millify
 from utils import ClientGoal, custom_colours, lighter_colours, fig_layout, format_currency
 
 
-def client_goal_performance(client_goals: [ClientGoal] = None, total: float = 0, prior: float = 0, order: str = None):
+def client_goal_performance(client_goals: [ClientGoal] = None, total: float = 0, prior: float = 0, order: str = None,
+                            dark: bool = True):
     goals_fig, goals_list = None, None
     lowest_target_amount, highest_target_amount, mid_price_investment = 0, 0, 0
 
@@ -75,5 +76,5 @@ def client_goal_performance(client_goals: [ClientGoal] = None, total: float = 0,
                 ], **{'data-uk-grid': 'true'},
                     className='uk-grid-divider uk-child-width-expand uk-grid-small')
             ], className='uk-card-body')
-        ], className='uk-card uk-card-default')
+        ], className='uk-card uk-card-default', style={'backgroundColor': custom_colours[-1]} if dark else {})
     ], className=order)

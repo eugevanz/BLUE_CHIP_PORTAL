@@ -1,6 +1,6 @@
 from dash import html
 
-from utils import Account, format_time, create_delete_item, format_currency
+from utils import Account, format_time, create_delete_item, format_currency, custom_colours
 
 
 def accounts_table(accounts: [Account], profile_id: str, accounts_balance: float, prior_accounts_balance: float):
@@ -59,5 +59,5 @@ def accounts_table(accounts: [Account], profile_id: str, accounts_balance: float
                     href=f'/add-account/{profile_id}/'),
                 className='uk-card-footer'
             )
-        ], className='uk-card uk-card-default uk-light', style={'backgroundColor': '#2A3A58'})
+        ], className='uk-card uk-card-default uk-light', style={'backgroundColor': custom_colours[-1]})
     ], className='uk-width-3-4@m')

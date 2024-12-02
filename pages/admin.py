@@ -9,7 +9,7 @@ from components.market_performance_card import market_performance
 from components.navbar import navbar
 from components.performance_summary_card import performance_summary
 from components.portfolio_performance_card import portfolio_performance
-from utils import all_profile_data, supabase_admin
+from utils import all_profile_data, supabase_admin, custom_colours
 
 dash.register_page(__name__, path_template='/admin/<profile_id>/', name='Admin')
 
@@ -53,9 +53,9 @@ def layout(profile_id: str):
                                     accounts_balance=accounts_balance, accounts=accounts, width_class='uk-width-1-3@m')
                 ], **{'data-uk-grid': 'true'}, className='uk-child-width-1-4@m uk-grid-small uk-grid-match')
             ], className='uk-container')
-        ], className='uk-section'),
+        ], className='uk-section uk-section-small'),
         footer()
-    ], style={'backgroundColor': '#88A9C3'})
+    ], className='uk-background-secondary uk-light')
 
 
 @callback(

@@ -1,6 +1,6 @@
 from dash import html
 
-from utils import Transaction, create_delete_item, format_time, format_currency
+from utils import Transaction, create_delete_item, format_time, format_currency, custom_colours
 
 
 def transactions_table(transactions: [Transaction], profile_id: str, transactions_balance: float,
@@ -59,5 +59,5 @@ def transactions_table(transactions: [Transaction], profile_id: str, transaction
                     href=f'/add-transaction/{profile_id}/'),
                 className='uk-card-footer'
             )
-        ], className='uk-card uk-card-default uk-light', style={'backgroundColor': '#2A3A58'})
+        ], className='uk-card uk-card-default uk-light', style={'backgroundColor': custom_colours[-1]})
     ])

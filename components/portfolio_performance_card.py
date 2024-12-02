@@ -50,5 +50,5 @@ def portfolio_performance(width_class: str = None):
                     enumerate(portfolio_df.columns[1:])
                 ], className='uk-flex uk-flex-wrap', style={'fontSize': '11px'})
             ], className='uk-card-footer')
-        ], className='uk-card uk-card-default uk-light', style={'backgroundColor': '#2A3A58'})
+        ], className='uk-card uk-card-default', style={'backgroundColor': custom_colours[-1]})
     ], className=width_class)

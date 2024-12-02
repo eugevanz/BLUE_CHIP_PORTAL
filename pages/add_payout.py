@@ -88,19 +88,19 @@ def layout(profile_id: str):
                     ]),
 
                     dividend_performance(dividends_and_payouts=dividends_and_payouts, total=payouts_balance,
-                                         prior=prior_payouts_balance,
-                                         order='uk-flex-first@l'),
-                    account_performance(accounts=accounts, total=accounts_balance, prior=prior_accounts_balance),
+                                         prior=prior_payouts_balance, order='uk-flex-first@l', dark=False),
+                    account_performance(accounts=accounts, total=accounts_balance, prior=prior_accounts_balance,
+                                        dark=False),
                     investment_performance(investments=investments, total=investments_balance,
-                                           prior=prior_investments_balance),
+                                           prior=prior_investments_balance, dark=False),
                     client_goal_performance(client_goals=client_goals, total=client_goals_balance,
-                                            prior=prior_client_goals_balance),
+                                            prior=prior_client_goals_balance, dark=False),
                     transaction_performance(transactions=transactions, total=transactions_balance,
-                                            prior=prior_transactions_balance)
+                                            prior=prior_transactions_balance, dark=False)
 
                 ], **{'data-uk-grid': 'masonry: pack'}, className='uk-child-width-1-2@m')
             ], className='uk-container')
-        ], className='uk-section'),
+        ], className='uk-section uk-section-small'),
         footer(is_light=False)
     ])
 

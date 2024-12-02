@@ -34,7 +34,7 @@ def market_performance():
                             'Compared to previous close ',
                             html.Span(id='price-change', className='uk-text-bolder'), html.Span(['%'])
                         ], className='uk-text-small uk-margin-remove-top')
-                    ]),
+                    ], className='uk-light'),
                     dcc.Dropdown([
                         {'label': 'S&P 500', 'value': '^GSPC'},
                         {'label': 'NASDAQ', 'value': '^IXIC'},
@@ -44,7 +44,7 @@ def market_performance():
                         {'label': 'Apple (AAPL)', 'value': 'AAPL'},
                         {'label': 'Google (GOOGL)', 'value': 'GOOGL'}
                     ], '^GSPC', id='ticker-dropdown',
-                        className='uk-select uk-form-small uk-form-blank uk-width-small', clearable=False)
+                        className='uk-width-small', clearable=False)
                 ], className='uk-flex uk-flex-between uk-flex-bottom')
             ], className='uk-card-header'),
             html.Div([
@@ -60,7 +60,7 @@ def market_performance():
                     ])
                 ], **{'data-uk-grid': 'true'},
                     className='uk-grid-divider uk-child-width-expand uk-grid-small')
-            ], className='uk-card-body'),
+            ], className='uk-card-body uk-light'),
             html.Div([
                 html.Div([
                     html.Div([
@@ -108,8 +108,8 @@ def market_performance():
                         ], className='uk-text-small uk-margin-remove-top')
                     ])
                 ], className='uk-flex uk-flex-between')
-            ], className='uk-card-footer')
-        ], className='uk-card uk-card-default')
+            ], className='uk-card-footer uk-light')
+        ], className='uk-card uk-card-default', style={'backgroundColor': custom_colours[0]})
     ], className='uk-width-4-5@m')
 
 
@@ -133,8 +133,8 @@ def update_market_figure(selected_ticker):
             high=market_df['High'],
             low=market_df['Low'],
             close=market_df['Close'],
-            increasing_line_color=custom_colours[0],
-            decreasing_line_color=custom_colours[1]
+            increasing_line_color=custom_colours[1],
+            decreasing_line_color=custom_colours[-2]
         )
     ])
     market_fig.update_layout({

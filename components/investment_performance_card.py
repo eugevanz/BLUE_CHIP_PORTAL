@@ -6,7 +6,8 @@ from shortnumbers import millify
 from utils import Investment, fig_layout, custom_colours, format_currency
 
 
-def investment_performance(investments: [Investment] = None, total: float = 0, prior: float = 0, order: str = None):
+def investment_performance(investments: [Investment] = None, total: float = 0, prior: float = 0, order: str = None,
+                           dark: bool = True):
     lowest_price_investment, highest_price_investment, mid_price_investment = 0, 0, 0
     investment_fig = None
 
@@ -71,5 +72,5 @@ def investment_performance(investments: [Investment] = None, total: float = 0, p
                 ], **{'data-uk-grid': 'true'},
                     className='uk-grid-divider uk-child-width-expand uk-grid-small')
             ], className='uk-card-body')
-        ], className='uk-card uk-card-default')
+        ], className='uk-card uk-card-default', style={'backgroundColor': custom_colours[-1]} if dark else {})
     ], className=order)

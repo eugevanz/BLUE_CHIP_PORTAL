@@ -64,6 +64,6 @@ def layout(profile_id: str):
                 ], **{'data-uk-grid': 'true'},
                     className='uk-child-width-1-3@m uk-grid-small uk-padding-small uk-grid-match')
             ], className='uk-container')
-        ], className='uk-section'),
+        ], className='uk-section uk-section-small'),
         footer()
-    ], style={'backgroundColor': '#88A9C3'})
+    ], className='uk-background-secondary uk-light')

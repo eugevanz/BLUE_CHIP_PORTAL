@@ -1,6 +1,6 @@
 from dash import html
 
-from utils import ClientGoal, format_time, create_delete_item, format_currency
+from utils import ClientGoal, format_time, create_delete_item, format_currency, custom_colours
 
 
 def client_goals_table(client_goals: [ClientGoal], profile_id: str, client_goals_balance: float,
@@ -58,5 +58,5 @@ def client_goals_table(client_goals: [ClientGoal], profile_id: str, client_goals
                     href=f'/add-client-goal/{profile_id}/'),
                 className='uk-card-footer'
             )
-        ], className='uk-card uk-card-default uk-light', style={'backgroundColor': '#2A3A58'})
+        ], className='uk-card uk-card-default uk-light', style={'backgroundColor': custom_colours[-1]})
     ])

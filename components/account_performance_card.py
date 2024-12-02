@@ -7,7 +7,7 @@ from utils import custom_colours, fig_layout, Account, format_currency
 
 
 def account_performance(accounts: [Account] = None, total: float = 0, prior: float = 0,
-                        order: str = None):
+                        order: str = None, dark: bool = True):
     lowest_account, highest_account, mid_account = 0, 0, 0
     account_fig = None
 
@@ -63,19 +63,25 @@ def account_performance(accounts: [Account] = None, total: float = 0, prior: flo
                     html.Div([
                         dcc.Graph(figure=account_fig, style={'height': '300px'}, config={'displayModeBar': False}),
                         html.Hr(),
-                        html.Div([
-                            html.Div([
-                                html.Div(className='uk-border-circle', style={
-                                    'backgroundColor': custom_colours[i], 'width': '8px',
-                                    'height': '8px'
-                                }),
-                                html.Div([account.account_type], className='uk-margin-small-left uk-text-small')
-                            ], className='uk-flex uk-flex-middle uk-margin-right') for i, account in
-                            enumerate(accounts)
-                        ], className='uk-flex uk-flex-wrap')
+                        html.Div(['Over the lifetime of the portfolio'], style={'fontSize': '8px'})
                     ])
                 ], **{'data-uk-grid': 'true'},
                     className='uk-grid-divider uk-child-width-expand uk-grid-small')
-            ], className='uk-card-body')
-        ], className='uk-card uk-card-default')
+            ], className='uk-card-body'),
+            html.Div([
+                html.Div([
+                    html.Div([
+                        html.Div(className='uk-border-circle', style={
+                            'backgroundColor': custom_colours[i], 'width': '8px',
+                            'height': '8px'
+                        }),
+                        html.Div([
+                            html.Div([account.account_type], className='uk-text-uppercase'),
+                            html.Div([f'R {account.balance:,.2f}'], className='uk-text-bolder')
+                        ], className='uk-margin-small-left')
+                    ], className='uk-flex uk-flex-middle uk-margin-right') for i, account in
+                    enumerate(accounts)
+                ], className='uk-flex uk-flex-wrap', style={'fontSize': '11px'})
+            ], className='uk-card-footer')
+        ], className='uk-card uk-card-default', style={'backgroundColor': custom_colours[-1]} if dark else {})
     ], className=order)

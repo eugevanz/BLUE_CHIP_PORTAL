@@ -2,7 +2,7 @@ from collections import defaultdict
 
 from dash import html, dcc
 
-from utils import format_currency
+from utils import format_currency, custom_colours
 
 
 def client_insights(profiles_, accounts, prior_accounts_balance=0, accounts_balance=0,
@@ -33,7 +33,7 @@ def client_insights(profiles_, accounts, prior_accounts_balance=0, accounts_bala
                     html.Span([
                         html.Span(['+' if total_difference > 0 else '']),
                         f'{total_difference:.2f}'.replace(',', ' '), '%'
-                    ], className=f'uk-text-{"success" if total_difference > 0 else "danger"} uk-text-bolder')
+                    ], className='uk-text-bolder')
                 ], className='uk-text-small uk-margin-remove-top')
             ], className='uk-card-header'),
             # Card body: Profile table
@@ -78,5 +78,5 @@ def client_insights(profiles_, accounts, prior_accounts_balance=0, accounts_bala
                     dcc.Input(id='client-search', type='search', placeholder='Search', className='uk-search-input'),
                 ], className='uk-search uk-search-default uk-width-1-1'),
             ], className='uk-card-footer')
-        ], className='uk-card uk-card-default')
+        ], className='uk-card uk-card-default uk-light', style={'backgroundColor': custom_colours[0]})
     ], className=width_class, id='client-insights')

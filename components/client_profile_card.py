@@ -29,5 +29,5 @@ def client_profile(profile: Profile):
             dcc.Input(className='uk-form-blank uk-h3 uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate',
                       value=pro_data['last_name'], debounce=True, id='last_name'),
             html.Div([pro_data['email']], className='uk-text-small uk-margin-remove-top uk-text-truncate')
-        ], className='uk-card uk-card-body uk-flex uk-flex-column')
+        ], className='uk-card uk-card-body uk-flex uk-flex-column uk-light')
     ], className='uk-width-1-4@m')
