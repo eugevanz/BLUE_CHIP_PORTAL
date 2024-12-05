@@ -1,6 +1,6 @@
-from dash import html
+from dash import html, dcc
 
-from utils import sign_out_button, Profile
+from utils import sign_out_button
 
 messages = [
     ('Written by Super User on 08 March 2021. Posted in Blog',
@@ -112,17 +112,34 @@ investment_faqs = [
 ]
 
 
-def client_menu(profile: Profile, width_class: str = 'uk-width-1-5@m'):
+def client_menu(width_class: str = 'uk-width-1-5@m'):
+    offcanvas_bar = lambda source: html.Div([
+        html.Div([
+            html.Span(**{'data-uk-icon': f'icon: question; ratio: 1.5'},
+                      className='uk-margin-right'),
+            html.Div([
+                html.H3([title], className='uk-article-title'),
+                html.P([content], className='uk-text-small')
+            ], id=faq_id, className='uk-article-content')
+        ], className='uk-margin-large-bottom')
+        for title, content, faq_id in source
+    ], className='uk-grid uk-child-width-1-1 uk-grid-match uk-margin-medium-top',
+        **{'data-uk-grid': 'true'})
+
     return html.Div([
+        dcc.Store(id='profile_picture_url'),
+        dcc.Store(id='first_name'),
+        dcc.Store(id='last_name'),
+        dcc.Store(id='email'),
         html.Div([
             html.Div([
                 html.Img(className='uk-border-circle', width='44', height='44',
-                         src=profile.profile_picture_url, alt='profile-pic'),
+                         id='picture_url', alt='profile-pic'),
                 html.H3([
-                    html.Span(profile.first_name, className='uk-text-bolder'),
-                    html.Br(), html.Span([profile.last_name])
+                    html.Span(id='profile_first_name', className='uk-text-bolder'),
+                    html.Br(), html.Span(id='profile_last_name')
                 ], className='uk-margin-remove-bottom uk-margin-remove-top uk-text-truncate'),
-                html.Div([profile.email], className='uk-text-small uk-margin-remove-top')
+                html.Div(id='profile_email', className='uk-text-small uk-margin-remove-top')
             ], className='uk-card-header'),
             html.Div([
                 html.Ul([
@@ -179,18 +196,7 @@ def client_menu(profile: Profile, width_class: str = 'uk-width-1-5@m'):
                                 html.Button(**{'data-uk-close': 'true'}, className='uk-offcanvas-close'),
                                 html.H3(['Frequently Asked Questions'],
                                         className='uk-heading-divider uk-margin-medium-bottom'),
-                                html.Div([
-                                    html.Div([
-                                        html.Span(**{'data-uk-icon': f'icon: question; ratio: 1.5'},
-                                                  className='uk-margin-right'),
-                                        html.Div([
-                                            html.H3([title], className='uk-article-title'),
-                                            html.P([content], className='uk-text-small')
-                                        ], id=faq_id, className='uk-article-content')
-                                    ], className='uk-margin-large-bottom')
-                                    for title, content, faq_id in faqs
-                                ], className='uk-grid uk-child-width-1-1 uk-grid-match uk-margin-medium-top',
-                                    **{'data-uk-grid': 'true'})
+                                offcanvas_bar(faqs)
                             ], className='uk-offcanvas-bar'),
                         ], id='faqs', **{'data-uk-offcanvas': 'mode: push; overlay: true'})
                     ]),
@@ -202,18 +208,7 @@ def client_menu(profile: Profile, width_class: str = 'uk-width-1-5@m'):
                                 html.Button(**{'data-uk-close': 'true'}, className='uk-offcanvas-close'),
                                 html.H3(['Investment Frequently Asked Questions'],
                                         className='uk-heading-divider uk-margin-medium-bottom'),
-                                html.Div([
-                                    html.Div([
-                                        html.Span(**{'data-uk-icon': f'icon: question; ratio: 1.5'},
-                                                  className='uk-margin-right'),
-                                        html.Div([
-                                            html.H3([title], className='uk-article-title'),
-                                            html.P([content], className='uk-text-small')
-                                        ], id=faq_id, className='uk-article-content')
-                                    ], className='uk-margin-large-bottom')
-                                    for title, content, faq_id in investment_faqs
-                                ], className='uk-grid uk-child-width-1-1 uk-grid-match uk-margin-medium-top',
-                                    **{'data-uk-grid': 'true'})
+                                offcanvas_bar(investment_faqs)
                             ], className='uk-offcanvas-bar'),
                         ], id='investment-faqs', **{'data-uk-offcanvas': 'mode: push; overlay: true'})
                     ]),

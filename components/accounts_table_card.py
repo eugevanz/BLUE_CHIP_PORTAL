@@ -1,29 +1,19 @@
-from dash import html
+from dash import html, dcc
 
-from utils import Account, format_time, create_delete_item, format_currency, custom_colours
+from utils import format_time, create_delete_item, custom_colours, cur
 
 
-def accounts_table(accounts: [Account], profile_id: str, accounts_balance: float, prior_accounts_balance: float):
-    if prior_accounts_balance == 0:
-        if accounts_balance == 0:
-            total_difference = 0  # No change if both are zero
-        else:
-            total_difference = float('inf')  # Represent as an infinite increase if prior_total is zero but total is not
-    else:
-        total_difference = (accounts_balance - prior_accounts_balance) / prior_accounts_balance * 100
+def accounts_table(profile_id: str):
+    accounts = cur.execute('SELECT * FROM accounts WHERE profile_id = ?', (profile_id,)).fetchall() or []
 
     return html.Div([
+        dcc.Store('profile_id', data=profile_id),
+        dcc.Store('name', data='accounts'),
         html.Div([
             html.Div([
                 html.Span(['Accounts'], className='uk-text-bolder'),
-                format_currency(accounts_balance),
-                html.Div([
-                    'Compared to last month ',
-                    html.Span([
-                        html.Span(['+' if total_difference > 0 else '']),
-                        f'{total_difference:.2f}', '%'
-                    ], className=f'uk-text-{"success" if total_difference > 0 else "danger"} uk-text-bolder')
-                ], className='uk-text-small uk-margin-remove-top')
+                html.Span(id='total_summary'),
+                html.Div(id='card_header', className='uk-text-small uk-margin-remove-top')
             ], className='uk-card-header'),
             html.Div([
                 html.Div([

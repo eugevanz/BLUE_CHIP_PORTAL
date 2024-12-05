@@ -1,30 +1,19 @@
-from dash import html
+from dash import html, dcc
 
-from utils import ClientGoal, format_time, create_delete_item, format_currency, custom_colours
+from utils import format_time, create_delete_item, custom_colours, cur
 
 
-def client_goals_table(client_goals: [ClientGoal], profile_id: str, client_goals_balance: float,
-                       prior_client_goals_balance: float):
-    if prior_client_goals_balance == 0:
-        if client_goals_balance == 0:
-            total_difference = 0  # No change if both are zero
-        else:
-            total_difference = float('inf')  # Represent as an infinite increase if prior_total is zero but total is not
-    else:
-        total_difference = (client_goals_balance - prior_client_goals_balance) / prior_client_goals_balance * 100
+def client_goals_table(profile_id: str):
+    client_goals = cur.execute('SELECT * FROM client_goals WHERE profile_id = ?', (profile_id,)).fetchall() or []
 
     return html.Div([
+        dcc.Store('profile_id', data=profile_id),
+        dcc.Store('name', data='client_goals'),
         html.Div([
             html.Div([
                 html.Span(['Client Goals'], className='uk-text-bolder'),
-                format_currency(client_goals_balance),
-                html.Div([
-                    'Compared to last month ',
-                    html.Span([
-                        html.Span(['+' if total_difference > 0 else '']),
-                        f'{total_difference:.2f}', '%'
-                    ], className=f'uk-text-{"success" if total_difference > 0 else "danger"} uk-text-bolder')
-                ], className='uk-text-small uk-margin-remove-top')
+                html.Span(id='total_summary'),
+                html.Div(id='card_header', className='uk-text-small uk-margin-remove-top')
             ], className='uk-card-header'),
             html.Div([
                 html.Div([
@@ -46,7 +35,7 @@ def client_goals_table(client_goals: [ClientGoal], profile_id: str, client_goals
                                 html.Td(html.Span(goal.goal_type, className='uk-text-bolder uk-text-uppercase')),
                                 html.Td(format_time(goal.target_date))
                             ]) for goal in client_goals
-                        ])
+                        ]) if client_goals else None
                     ], className='uk-table uk-table-middle uk-table-divider uk-table-hover')
                 ], className='uk-overflow-auto uk-height-large')
             ], className='uk-card-body'),

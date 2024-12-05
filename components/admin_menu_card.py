@@ -1,29 +1,38 @@
 from dash import html, dcc
 
-from utils import profile_data, Account, ClientGoal, DividendOrPayout, Investment, Transaction, format_time, \
-    sign_out_button
+from utils import format_time, \
+    sign_out_button, cur
 
 
-def admin_menu(accounts: [Account], client_goals: [ClientGoal], dividends_and_payouts: [DividendOrPayout],
-               investments: [Investment], transactions: [Transaction], profile_id=None):
-    recent_account = max(accounts, key=lambda account: account.updated_at)
-    recent_goal = max(client_goals, key=lambda goal: goal.updated_at)
-    recent_payout = max(dividends_and_payouts, key=lambda payout: payout.payment_date)
-    recent_invest = max(investments, key=lambda invest: invest.updated_at)
-    recent_trans = max(transactions, key=lambda trans: trans.created_at)
-    profile = profile_data(profile_id)
+def admin_menu():
+    recent_account = cur.execute(
+        "SELECT * FROM accounts ORDER BY COALESCE(updated_at, '0001-01-01T00:00:00') DESC LIMIT 1;"
+    ).fetchone()
+    recent_goal = cur.execute(
+        "SELECT * FROM client_goals ORDER BY COALESCE(updated_at, '0001-01-01T00:00:00') DESC LIMIT 1;"
+    ).fetchone()
+    recent_payout = cur.execute(
+        "SELECT * FROM dividends_payouts ORDER BY COALESCE(payment_date, '0001-01-01T00:00:00') DESC LIMIT 1;"
+    ).fetchone()
+    recent_invest = cur.execute(
+        "SELECT * FROM investments ORDER BY COALESCE(updated_at, '0001-01-01T00:00:00') DESC LIMIT 1;"
+    ).fetchone()
+    recent_trans = cur.execute(
+        "SELECT * FROM transactions ORDER BY COALESCE(created_at, '0001-01-01T00:00:00') DESC LIMIT 1;"
+    ).fetchone()
 
     return html.Div([
+        dcc.Store(id='profile-store'),
         html.Div([
             html.Div([
                 html.Img(className='uk-border-circle uk-margin', width='44', height='44',
-                         src=profile['profile'].profile_picture_url, alt='profile-pic'),
+                         id='profile-picture-url', alt='profile-pic'),
                 html.Div(['Administrator'], className='uk-text-small'),
                 html.H3([
-                    html.Span(profile['profile'].first_name, className='uk-text-bolder'),
-                    html.Br(), html.Span([profile['profile'].last_name])
+                    html.Span(id='first-name', className='uk-text-bolder'),
+                    html.Br(), html.Span(id='last-name')
                 ], className='uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate'),
-                html.Div([profile['profile'].email or 'email address'], className='uk-text-small uk-margin-remove-top')
+                html.Div(id='email', className='uk-text-small uk-margin-remove-top')
             ], className='uk-card-header'),
             html.Div([
                 html.Ul([
@@ -72,23 +81,23 @@ def admin_menu(accounts: [Account], client_goals: [ClientGoal], dividends_and_pa
                                             html.Tr([
                                                 html.Td([recent_account.account_type]),
                                                 html.Td([format_time(recent_account.updated_at)]),
-                                            ]),
+                                            ]) if recent_account else None,
                                             html.Tr([
                                                 html.Td(['Goal: ', recent_goal.goal_type]),
                                                 html.Td([format_time(recent_goal.updated_at)]),
-                                            ]),
+                                            ]) if recent_goal else None,
                                             html.Tr([
                                                 html.Td(['Recent payout']),
                                                 html.Td([format_time(recent_payout.payment_date)]),
-                                            ]),
+                                            ]) if recent_payout else None,
                                             html.Tr([
                                                 html.Td([recent_invest.investment_type, ' investment']),
                                                 html.Td([format_time(recent_invest.updated_at)]),
-                                            ]),
+                                            ]) if recent_invest else None,
                                             html.Tr([
                                                 html.Td([recent_trans.type], className='uk-text-uppercase'),
                                                 html.Td([format_time(recent_trans.created_at)]),
-                                            ])
+                                            ]) if recent_trans else None
                                         ]),
                                     ], className='uk-table uk-table-divider')
                                 ], className='uk-margin')

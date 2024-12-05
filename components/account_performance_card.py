@@ -1,87 +1,74 @@
 import pandas as pd
 import plotly.express as px
-from dash import html, dcc
-from shortnumbers import millify
+from dash import html, dcc, Output, Input, callback
 
-from utils import custom_colours, fig_layout, Account, format_currency
+from utils import custom_colours, fig_layout, cur
 
 
-def account_performance(accounts: [Account] = None, total: float = 0, prior: float = 0,
-                        order: str = None, dark: bool = True):
-    lowest_account, highest_account, mid_account = 0, 0, 0
-    account_fig = None
-
-    if accounts is None:
-        accounts = []
-    else:
-        lowest_account = min(accounts, key=lambda x: x.balance, default=None).balance
-        highest_account = max(accounts, key=lambda x: x.balance, default=None).balance
-        mid_account = (highest_account + lowest_account) / 2
-
-        accounts_df = pd.DataFrame({
-            'Date': [account.created_at for account in accounts],
-            'Balance': [account.balance for account in accounts],
-            'Type': [account.account_type for account in accounts]
-        })
-        accounts_df['Date'] = pd.to_datetime(accounts_df['Date'])
-        account_fig = px.scatter(
-            accounts_df, x="Date", y="Balance", size="Balance", color="Date",
-            hover_data={'Date': True, 'Balance': True, 'Type': True}, size_max=60,
-            color_discrete_sequence=custom_colours
-        )
-        account_fig.update_layout(**fig_layout)
-
-    if prior == 0:
-        if total == 0:
-            total_difference = 0  # No change if both are zero
-        else:
-            total_difference = float('inf')  # Represent as an infinite increase if prior_total is zero but total is not
-    else:
-        total_difference = (total - prior) / prior * 100
-
+def account_performance(order: str = None, dark: bool = True):
     return html.Div([
+        dcc.Store('name', data='accounts'),
+        dcc.Store('profile_id'),
+        dcc.Store('column', data='balance'),
         html.Div([
             html.Div([
                 html.Div('Accounts performance', className='uk-text-small'),
-                format_currency(total),
-                html.Div(['Compared to last month ', html.Span([
-                    html.Span(['+' if total_difference > 0 else '']),
-                    f'{total_difference:.2f}', '%'
-                ], className=f'uk-text-{"success" if total_difference > 0 else "danger"} uk-text-bolder')],
-                         className='uk-text-small uk-margin-remove-top')
+                html.Span(id='total_summary'),
+                html.Div(id='card_header', className='uk-text-small uk-margin-remove-top')
             ], className='uk-card-header'),
             html.Div([
                 html.Div([
                     html.Div([
                         html.Div([
-                            html.Div([f'R {millify(highest_account)}']),
-                            html.Div([f'R {millify(mid_account)}'], className='uk-margin-auto-vertical'),
-                            html.Div([f'R {millify(lowest_account)}'])
+                            html.Div(id='highest_'),
+                            html.Div(id='mid_', className='uk-margin-auto-vertical'),
+                            html.Div(id='lowest_')
                         ], className='uk-flex uk-flex-column uk-height-medium',
                             style={'fontSize': '8px'})
                     ], className='uk-width-auto'),
                     html.Div([
-                        dcc.Graph(figure=account_fig, style={'height': '300px'}, config={'displayModeBar': False}),
+                        dcc.Graph(id='account_fig', style={'height': '300px'}, config={'displayModeBar': False}),
                         html.Hr(),
                         html.Div(['Over the lifetime of the portfolio'], style={'fontSize': '8px'})
                     ])
                 ], **{'data-uk-grid': 'true'},
                     className='uk-grid-divider uk-child-width-expand uk-grid-small')
             ], className='uk-card-body'),
-            html.Div([
-                html.Div([
-                    html.Div([
-                        html.Div(className='uk-border-circle', style={
-                            'backgroundColor': custom_colours[i], 'width': '8px',
-                            'height': '8px'
-                        }),
-                        html.Div([
-                            html.Div([account.account_type], className='uk-text-uppercase'),
-                            html.Div([f'R {account.balance:,.2f}'], className='uk-text-bolder')
-                        ], className='uk-margin-small-left')
-                    ], className='uk-flex uk-flex-middle uk-margin-right') for i, account in
-                    enumerate(accounts)
-                ], className='uk-flex uk-flex-wrap', style={'fontSize': '11px'})
-            ], className='uk-card-footer')
+            html.Div(id='card-footer', className='uk-card-footer')
         ], className='uk-card uk-card-default', style={'backgroundColor': custom_colours[-1]} if dark else {})
     ], className=order)
+
+
+@callback(
+    Output('account_fig', 'figure'),
+    Output('card-footer', 'children'),
+    Input('profile_id', 'data')
+)
+def get_account_fig(profile_id):
+    accounts = cur.execute('SELECT * FROM accounts WHERE profile_id = ?', (profile_id,)).fetchall()
+
+    accounts_df = pd.DataFrame({
+        'Date': [account.created_at for account in accounts],
+        'Balance': [account.balance for account in accounts],
+        'Type': [account.account_type for account in accounts]
+    })
+    accounts_df['Date'] = pd.to_datetime(accounts_df['Date'])
+    account_fig = px.scatter(
+        accounts_df, x="Date", y="Balance", size="Balance", color="Date",
+        hover_data={'Date': True, 'Balance': True, 'Type': True}, size_max=60,
+        color_discrete_sequence=custom_colours
+    )
+    account_fig.update_layout(**fig_layout)
+
+    return account_fig, html.Div([
+        html.Div([
+            html.Div(className='uk-border-circle', style={
+                'backgroundColor': custom_colours[i], 'width': '8px', 'height': '8px'
+            }),
+            html.Div([
+                html.Div([account.account_type], className='uk-text-uppercase'),
+                html.Div([f'R {account.balance:,.2f}'], className='uk-text-bolder')
+            ], className='uk-margin-small-left')
+        ], className='uk-flex uk-flex-middle uk-margin-right') for i, account in
+        enumerate(accounts)
+    ], className='uk-flex uk-flex-wrap', style={'fontSize': '11px'})

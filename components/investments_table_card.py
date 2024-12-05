@@ -1,30 +1,21 @@
-from dash import html
+from dash import html, dcc
 
-from utils import create_delete_item, format_time, Investment, format_currency, custom_colours
+from utils import create_delete_item, format_time, custom_colours, cur
 
 
-def investments_table(investments: [Investment], profile_id: str, investments_balance: float,
-                      prior_investments_balance: float):
-    if prior_investments_balance == 0:
-        if investments_balance == 0:
-            total_difference = 0  # No change if both are zero
-        else:
-            total_difference = float('inf')  # Represent as an infinite increase if prior_total is zero but total is not
-    else:
-        total_difference = (investments_balance - prior_investments_balance) / prior_investments_balance * 100
+def investments_table(profile_id: str):
+    investments = cur.execute(
+        'SELECT i.* FROM investments i JOIN accounts a ON i.account_id = a.id WHERE a.profile_id = ?', (profile_id,)
+    ).fetchall() or []
 
     return html.Div([
+        dcc.Store('profile_id', data=profile_id),
+        dcc.Store('name', data='investments'),
         html.Div([
             html.Div([
                 html.Span(['Investments'], className='uk-text-bolder'),
-                format_currency(investments_balance),
-                html.Div([
-                    'Compared to last month ',
-                    html.Span([
-                        html.Span(['+' if total_difference > 0 else '']),
-                        f'{total_difference:.2f}', '%'
-                    ], className=f'uk-text-{"success" if total_difference > 0 else "danger"} uk-text-bolder')
-                ], className='uk-text-small uk-margin-remove-top')
+                html.Span(id='total_summary'),
+                html.Div(id='card_header', className='uk-text-small uk-margin-remove-top')
             ], className='uk-card-header'),
             html.Div([
                 html.Div([
@@ -49,7 +40,7 @@ def investments_table(investments: [Investment], profile_id: str, investments_ba
                                 html.Td(f'R {investment.current_price:,.2f}'),
                                 html.Td(format_time(investment.purchase_date))
                             ]) for investment in investments
-                        ])
+                        ]) if investments else None
                     ], className='uk-table uk-table-middle uk-table-divider uk-table-hover')
                 ], className='uk-overflow-auto uk-height-large')
             ], className='uk-card-body'),

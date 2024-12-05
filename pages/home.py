@@ -1,7 +1,5 @@
 import dash
-from dash import dcc, callback, Output, Input, State, html
-
-from utils import supabase
+from dash import dcc, html
 
 dash.register_page(__name__, path='/', name='Welcome to Blue Chip Investments')
 
@@ -9,21 +7,6 @@ dash.register_page(__name__, path='/', name='Welcome to Blue Chip Investments')
 def layout():
     """Creates the layout for the login page."""
     return html.Div([
-        # html.Div([
-        #     html.Div([
-        #         html.Div([
-        #             html.Img(
-        #                 src='https://oujdrprpkkwxeavzbaow.supabase.co/storage/v1/object/public/website_images'
-        #                     '/Blue%20Chip%20Invest%20Logo.001.png',
-        #                 width='60', height='60'),
-        #             html.Div(['BLUE CHIP INVESTMENTS'],
-        #                      style={'fontFamily': '"Noto Sans", sans-serif', 'fontOpticalSizing': 'auto',
-        #                             'fontWeight': '400', 'fontStyle': 'normal', 'lineHeight': '22px',
-        #                             'color': '#091235', 'width': '164px'})
-        #         ], className='uk-logo uk-flex'),
-        #         html.Div(['Welcome to Blue Chip Investments'])
-        #     ], className='uk-grid-large uk-flex-bottom uk-padding-small', **{'data-uk-grid': 'true'})
-        # ], className='uk-card uk-card-body'),
         html.Div([
             # Background image section
             html.Div(
@@ -100,70 +83,3 @@ def layout():
             ], className='uk-padding-large')
         ], **{'data-uk-grid': 'true'}, className='uk-grid-collapse uk-child-width-1-2@m')
     ])
-
-
-@callback(
-    Output('send-code-notifications', 'children'),
-    Output('otp-input-container', 'style'),
-    Output('email-input-container', 'style'),
-    Input('request-otp-btn', 'n_clicks'),
-    State('login-email', 'value'),
-    prevent_initial_call=True
-)
-def request_otp(n_clicks, login_email):
-    """Send OTP code for email verification upon button click."""
-    if n_clicks and login_email:
-        try:
-            response = supabase.auth.sign_in_with_otp({
-                'email': login_email,
-                'options': {'should_create_user': False}
-            })
-
-            if response and response.user is None:
-                return "", {'display': 'block'}, {'display': 'none'}
-            else:
-                error_message = response.error.message
-                return html.P(f'Error sending OTP: {error_message}',
-                              className='uk-text-danger uk-text-bolder uk-margin'), dash.no_update, dash.no_update
-
-        except Exception as e:
-            return html.P(f'Authentication error: {str(e)}',
-                          className='uk-text-danger uk-text-bolder uk-margin'), dash.no_update, dash.no_update
-
-    return html.P('Please enter your email and click Send Code.',
-                  className='uk-text-small'), dash.no_update, dash.no_update
-
-
-@callback(
-    [Output('url', 'href', allow_duplicate=True),
-    Output('access_token', 'data', allow_duplicate=True)],
-    Input('verify-code-btn', 'n_clicks'),
-    State('login-email', 'value'),
-    State('sent-code', 'value'),
-    prevent_initial_call=True
-)
-def verify_otp(n_clicks, login_email, sent_code):
-    """Verify the OTP sent to the user's email."""
-    if n_clicks and sent_code:
-        try:
-            response = supabase.auth.verify_otp({
-                'email': login_email,
-                'token': sent_code,
-                'type': 'email'
-            })
-
-            if response and response.user:
-                admin_users = ['travis@bluechipinvest.co.za', 'eugevanz@gmail.com', 'raymondanthony.m@gmail.com']
-                user_email = response.user.email
-                access_token = response.session.access_token
-
-                if user_email in admin_users:
-                    return [f'/admin/{response.user.id}/', access_token]
-                else:
-                    return [f'/client_portal/{response.user.id}/', access_token]
-
-        except Exception as e:
-            print(f'Admin Authentication error: {e}')
-            return [dash.no_update, dash.no_update]
-
-    return [dash.no_update, dash.no_update]
