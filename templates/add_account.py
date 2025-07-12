@@ -1,6 +1,5 @@
 import dash
 from dash import dcc, callback, Output, State, Input, html
-from sqlalchemy.orm import Session
 
 from components.account_performance_card import account_performance
 from components.client_goal_performance_card import client_goal_performance
@@ -9,35 +8,20 @@ from components.footer_section import footer
 from components.investment_performance_card import investment_performance
 from components.navbar import navbar
 from components.transaction_performance_card import transaction_performance
-from utils import engine, Account, profile_data
+from utils import supabase, cur, conn
 
 dash.register_page(__name__, path_template='/add-account/<profile_id>/', name='Add Account')
 
 
 def layout(profile_id: str):
-    data = profile_data(profile_id)
-    profile = data['profile']
-    accounts = data['accounts']
-    accounts_balance = data['accounts_balance']
-    prior_accounts_balance = data['prior_accounts_balance']
-    dividends_and_payouts = data['dividends_and_payouts']
-    payouts_balance = data['payouts_balance']
-    prior_payouts_balance = data['prior_payouts_balance']
-    client_goals = data['client_goals']
-    client_goals_balance = data['client_goals_balance']
-    prior_client_goals_balance = data['prior_client_goals_balance']
-    transactions = data['transactions']
-    transactions_balance = data['transactions_balance']
-    prior_transactions_balance = data['prior_transactions_balance']
-    investments = data['investments']
-    investments_balance = data['investments_balance']
-    prior_investments_balance = data['prior_investments_balance']
+    profile_response = supabase.table('profiles').select('*').eq('id', profile_id).limit(1).single().execute()
+    profile = profile_response.data
 
     return html.Div([
         dcc.Location(id='acc-url'),
-        dcc.Store(id='profile-id-store', data=profile_id),
+        dcc.Store(id='profile_id'),
         navbar([
-            ('Admin', f'/admin/{profile_id}/'), (f'Edit Profile ({profile.email})', f'/edit/{profile_id}/'),
+            ('Admin', f'/admin/{profile_id}/'), (f'Edit Profile ({profile.email})', f'/edit/{profile.id}/'),
             ('Add Account', '')
         ]),
         html.Div([
@@ -98,16 +82,11 @@ def layout(profile_id: str):
                         ], className='uk-card uk-card-body uk-margin-large-bottom')
                     ]),
 
-                    account_performance(accounts=accounts, total=accounts_balance, prior=prior_accounts_balance,
-                                        order='uk-flex-first@l', dark=False),
-                    dividend_performance(dividends_and_payouts=dividends_and_payouts, total=payouts_balance,
-                                         prior=prior_payouts_balance, dark=False),
-                    investment_performance(investments=investments, total=investments_balance,
-                                           prior=prior_investments_balance, dark=False),
-                    client_goal_performance(client_goals=client_goals, total=client_goals_balance,
-                                            prior=prior_client_goals_balance, dark=False),
-                    transaction_performance(transactions=transactions, total=transactions_balance,
-                                            prior=prior_transactions_balance, dark=False),
+                    account_performance(profile_id=profile_id, order='uk-flex-first@l', dark=False),
+                    dividend_performance(profile_id=profile_id, dark=False),
+                    investment_performance(profile_id=profile_id, dark=False),
+                    client_goal_performance(profile_id=profile_id, dark=False),
+                    transaction_performance(profile_id=profile_id, dark=False),
 
                 ], **{'data-uk-grid': 'masonry: pack'}, className='uk-child-width-1-2@m'),
             ], className='uk-container')
@@ -118,7 +97,7 @@ def layout(profile_id: str):
 
 @callback(
     Output('acc-url', 'href'),
-    State('profile-id-store', 'data'),
+    State('profile-id', 'data'),
     State('account_type', 'value'),
     State('account_number', 'value'),
     State('balance', 'value'),
@@ -126,18 +105,12 @@ def layout(profile_id: str):
     prevent_initial_callback=True
 )
 def add_account(profile_id, account_type, account_number, balance, n_clicks):
-    with Session(engine) as session:
-        if n_clicks and account_type and account_number and balance:
-            session.add(Account(
-                profile_id=profile_id, account_number=account_number, account_type=account_type, balance=balance
-            ))
-            session.commit()
-            return f'/edit/{profile_id}/'
-
-
-@callback(
-    Output('acc-nav', 'children'),
-    Input('acc-url', 'pathname')
-)
-def show_current_location(pathname):
-    return navbar(pathname)
+    if n_clicks and account_type and account_number and balance:
+        cur.execute(
+            'INSERT INTO accounts (profile_id, account_number, account_type, balance) VALUES (?, ?, ?)',
+            (profile_id, account_number, account_type, balance)
+        )
+        conn.commit()
+        return f'/edit/{profile_id}/'
+    else:
+        raise dash.exceptions.PreventUpdate

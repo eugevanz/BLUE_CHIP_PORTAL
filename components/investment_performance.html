@@ -1,0 +1,41 @@
+<div class="investment-performance">
+    <div>
+        <!-- Store Elements -->
+        <dcc-store data="investments" id="name"></dcc-store>
+        <dcc-store data="current_price" id="column"></dcc-store>
+        <dcc-store data="profile_id" id="profile_id"></dcc-store>
+
+        <!-- Card Structure -->
+        <div class="uk-card uk-card-default" className="uk-card-body" style="background-color: {custom_colors[-1]}">
+            <!-- Header Section -->
+            <div class="uk-card-header">
+                <div class="uk-text-small">
+                    Investments performance
+                </div>
+                <span id="total_summary"></span>
+                <div class="uk-text-small uk-margin-remove-top" id="card_header"></div>
+            </div>
+
+            <!-- Body Section -->
+            <div class="uk-card-body">
+                <div class="uk-grid-divider uk-child-width-expand uk-grid-small" data-uk-grid="true">
+                    <div class="uk-width-auto">
+                        <div class="uk-flex uk-flex-column uk-height-small" style="font-size: 8px">
+                            <div id="highest_"></div>
+                            <div class="uk-margin-auto-vertical" id="mid_"></div>
+                            <div id="lowest_"></div>
+                        </div>
+                    </div>
+
+                    <!-- Graph Section -->
+                    <div>
+                        <dcc-graph config='{"displayModeBar": false}' id="investment_fig"
+                                   style="height: 150px"></dcc-graph>
+                        <hr/>
+                        <div class="uk-flex uk-flex-wrap" id="legend"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

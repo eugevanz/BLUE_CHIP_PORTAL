@@ -1,0 +1,40 @@
+<div>
+    <div>
+        <div class="uk-card-header">
+            <span class="uk-text-bolder">Dividends/Payouts</span>
+            <span id="total_summary"></span>
+            <div class="uk-text-small uk-margin-remove-top" id="card_header"></div>
+        </div>
+        <div>
+            <div>
+                <table class="uk-table uk-table-middle uk-table-divider uk-table-hover">
+                    <thead>
+                    <tr>
+                        <th class="uk-table-shrink"></th>
+                        <th class="uk-table-expand">Payment Date</th>
+                        <th class="uk-table-expand">Amount</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <!-- Example for a single payout -->
+                    <tr>
+                        <td>
+                            <!-- Add your delete item functionality here -->
+                            <button class="uk-button uk-button-danger uk-button-small">Delete</button>
+                        </td>
+                        <td>2024-12-01</td>
+                        <td>R 500.00</td>
+                    </tr>
+                    <!-- Repeat for other payouts -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="uk-card-footer">
+            <a class="uk-button uk-button-text uk-flex uk-flex-middle" href="/add-payout/{profile_id}/">
+                <span class="uk-margin-small-right" data-uk-icon="icon: plus; ratio: 0.6"></span>
+                Add Dividends/Payouts
+            </a>
+        </div>
+    </div>
+</div>

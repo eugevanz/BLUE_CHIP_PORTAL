@@ -5,10 +5,10 @@ from dash import html, dcc, Output, Input, callback
 from utils import custom_colours, fig_layout, cur
 
 
-def account_performance(order: str = None, dark: bool = True):
+def account_performance(profile_id: str, order: str = None, dark: bool = True):
     return html.Div([
         dcc.Store('name', data='accounts'),
-        dcc.Store('profile_id'),
+        dcc.Store('profile_id', data=profile_id),
         dcc.Store('column', data='balance'),
         html.Div([
             html.Div([

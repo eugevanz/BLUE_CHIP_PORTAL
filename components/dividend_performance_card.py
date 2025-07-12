@@ -6,10 +6,10 @@ from dash import html, dcc, Output, Input, callback
 from utils import format_time, custom_colours, fig_layout, cur
 
 
-def dividend_performance(order: str = None, dark: bool = True):
+def dividend_performance(profile_id: str, order: str = None, dark: bool = True):
     return html.Div([
         dcc.Store('name', data='dividends_payouts'),
-        dcc.Store('profile_id'),
+        dcc.Store('profile_id', data=profile_id),
         html.Div([
             html.Div([
                 html.Div('Dividend/Payout performance', className='uk-text-small'),

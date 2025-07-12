@@ -1,0 +1,44 @@
+<div>
+    <div class="uk-card uk-card-default uk-light" style="background-color: #88A9C3;">
+        <div class="uk-card-header">
+            <span class="uk-text-bolder">Client Goals</span>
+            <span id="total_summary"></span>
+            <div class="uk-text-small uk-margin-remove-top" id="card_header"></div>
+        </div>
+
+        <div class="uk-card-body">
+            <div class="uk-overflow-auto uk-height-large">
+                <table class="uk-table uk-table-middle uk-table-divider uk-table-hover">
+                    <thead>
+                    <tr>
+                        <th class="uk-table-shrink"></th>
+                        <th class="uk-table-expand">Current Savings</th>
+                        <th class="uk-table-expand">Target Amount</th>
+                        <th class="uk-table-expand">Goal</th>
+                        <th class="uk-table-expand">Target Date</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <!-- Loop through client_goals and display data for each goal -->
+                    <!-- Example Goal Row -->
+                    <tr>
+                        <td><!-- Delete Item Button --></td>
+                        <td>R 5,000.00</td>
+                        <td>R 10,000.00</td>
+                        <td><span class="uk-text-bolder uk-text-uppercase">Savings Goal</span></td>
+                        <td>2025-12-31</td>
+                    </tr>
+                    <!-- More Goal Rows can be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="uk-card-footer">
+            <a class="uk-button uk-button-text uk-flex uk-flex-middle" href="/add-client-goal/123/">
+                <span class="uk-margin-small-right" data-uk-icon="icon: plus; ratio: 0.6"></span>
+                Add goal
+            </a>
+        </div>
+    </div>
+</div>

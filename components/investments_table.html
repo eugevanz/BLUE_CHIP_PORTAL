@@ -1,0 +1,61 @@
+<div class="investments-table">
+    <div>
+        <!-- Store Elements -->
+        <dcc-store data="profile_id" id="profile_id"></dcc-store>
+        <dcc-store data="investments" id="name"></dcc-store>
+
+        <!-- Card Structure -->
+        <div class="uk-card uk-card-default uk-light" className="uk-card-body"
+             style="background-color: {custom_colors[-1]}">
+            <!-- Header Section -->
+            <div class="uk-card-header">
+                <span class="uk-text-bolder">Investments</span>
+                <span id="total_summary"></span>
+                <div class="uk-text-small uk-margin-remove-top" id="card_header"></div>
+            </div>
+
+            <!-- Body Section -->
+            <div class="uk-card-body">
+                <div class="uk-overflow-auto uk-height-large">
+                    <!-- Table Section -->
+                    <table class="uk-table uk-table-middle uk-table-divider uk-table-hover">
+                        <thead>
+                        <tr>
+                            <th class="uk-table-shrink"></th>
+                            <th class="uk-table-expand">Investment</th>
+                            <th class="uk-table-expand">Amount</th>
+                            <th class="uk-table-expand">Purchase Price</th>
+                            <th class="uk-table-expand">Current Price</th>
+                            <th class="uk-table-expand">Last Updated</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <!-- Row for Each Investment -->
+                        {# If there are investments, loop through each investment to display them #}
+                        {% for investment in investments %}
+                        <tr>
+                            <td>{create_delete_item(type_id='delete_investment', item_id=investment.id)}</td>
+                            <td>
+                                <span class="uk-text-bolder uk-text-uppercase">{{ investment.investment_type }}</span>
+                            </td>
+                            <td>{{ investment.quantity }}</td>
+                            <td>R {{ investment.purchase_price | format_price }}</td>
+                            <td>R {{ investment.current_price | format_price }}</td>
+                            <td>{{ format_time(investment.purchase_date) }}</td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Footer Section -->
+            <div class="uk-card-footer">
+                <a class="uk-button uk-button-text uk-flex uk-flex-middle" href="/add-investment/{{ profile_id }}">
+                    <span class="uk-margin-small-right" data-uk-icon="icon: plus; ratio: 0.6"></span>
+                    Add Investments
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

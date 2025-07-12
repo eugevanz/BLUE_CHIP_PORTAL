@@ -3,7 +3,6 @@ from typing import Dict, Type
 import dash
 from dash import dcc, Output, callback, Input, State, html, ALL
 from dash.exceptions import PreventUpdate
-from sqlalchemy.orm import Session
 
 from components.accounts_table_card import accounts_table
 from components.client_goals_table_card import client_goals_table
@@ -15,7 +14,7 @@ from components.payouts_table_card import payouts_table
 from components.transactions_table_card import transactions_table
 from utils import (
     Account, Investment, Transaction, ClientGoal,
-    engine, DividendOrPayout, supabase, cur
+    DividendOrPayout, supabase, cur
 )
 
 dash.register_page(__name__, path_template='/edit/<profile_id>/', name='Edit Profile')
@@ -80,7 +79,7 @@ def create_delete_callback(delete_type: str):
             raise PreventUpdate
 
         item_id = ids[clicked_index]['index']
-        cur.execute(f'DELETE FROM {model} WHERE id = ?',(item_id,))
+        cur.execute(f'DELETE FROM {model} WHERE id = ?', (item_id,))
         return f'/edit/{profile_id}/'
 
     return delete_handler

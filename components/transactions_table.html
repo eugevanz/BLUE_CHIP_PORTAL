@@ -1,0 +1,45 @@
+<div class="uk-card uk-card-default uk-light" style="background-color: #your_custom_color;">
+    <div>
+        <div class="uk-card-header">
+            <span class="uk-text-bolder">Transactions</span>
+            <span id="total_summary"></span> <!-- Placeholder for dynamic total summary -->
+            <div class="uk-text-small uk-margin-remove-top" id="card_header"></div>
+            <!-- Placeholder for dynamic card header -->
+        </div>
+        <div class="uk-card-body">
+            <div class="uk-overflow-auto uk-height-large">
+                <table class="uk-table uk-table-middle uk-table-divider uk-table-hover">
+                    <thead>
+                    <tr>
+                        <th class="uk-table-shrink"></th>
+                        <th class="uk-table-expand">Description</th>
+                        <th class="uk-table-expand">Transaction Type</th>
+                        <th class="uk-table-expand">Amount</th>
+                        <th class="uk-table-expand">Last Updated</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <!-- Placeholder for dynamic rows -->
+                    <!-- Example row -->
+                    <tr>
+                        <td>
+                            <button class="uk-button uk-button-small">Delete</button>
+                        </td> <!-- Example for delete button -->
+                        <td>Transaction Description</td>
+                        <td class="uk-text-success">Debit</td>
+                        <td>R 1,000.00</td>
+                        <td>2024-12-10</td>
+                    </tr>
+                    <!-- Add more rows dynamically here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="uk-card-footer">
+            <a class="uk-button uk-button-text uk-flex uk-flex-middle" href="/add-transaction/{profile_id}/">
+                <span class="uk-margin-small-right" data-uk-icon="icon: plus; ratio: 0.6"></span>
+                Add transaction
+            </a>
+        </div>
+    </div>
+</div>

@@ -3,7 +3,6 @@ import uuid
 from datetime import datetime
 from os import environ
 
-import libsql_experimental as libsql
 import numpy as np
 import pandas as pd
 import plotly.express as px
@@ -13,13 +12,13 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from supabase import create_client
 
-from utilities.create_tables import create_profiles, create_accounts, create_dividends_payouts, create_client_goals, \
-    create_transactions, create_investments
-
-TURSO_DATABASE_URL = environ.get('TURSO_DATABASE_URL')
-TURSO_AUTH_TOKEN = environ.get('TURSO_AUTH_TOKEN')
-conn = libsql.connect('blue-chip-invest.db')
-cur = conn.cursor()
+# TURSO_DATABASE_URL = environ.get('TURSO_DATABASE_URL')
+# # https://blue-chip-invest-eugevanz.aws-us-east-1.turso.io
+# TURSO_AUTH_TOKEN = environ.get('TURSO_AUTH_TOKEN')
+# # eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MzM0MzI2NzQsImlkIjoiYjRmOGFjMzYtNjIxNy00NWRjLWJlYTgtYWM3MjlmNDkzYT
+# # JhIn0.V1yYnrFHEJok_8ieZjHYv_yEv0kp3OxsoQjHa4tvKsQKH3RnG6qDq4Xj-hb9XRu7fvg_Bz0sKpwf2vpw9IGECQ
+# conn = libsql.connect('blue-chip-invest.db')
+# cur = conn.cursor()
 
 SUPABASE_URL = environ.get('SUPABASE_URL')
 SUPABASE_KEY = environ.get('SUPABASE_KEY')
@@ -491,305 +490,305 @@ def precision_financial_tools():
     )
 
 
-create_accounts()
-create_profiles()
-create_dividends_payouts()
-create_client_goals()
-create_transactions()
-create_investments()
-
-
-def all_profile_data():
-    # Fetch all client profiles
-    profiles = cur.execute('SELECT * FROM profiles WHERE profile_type = ?', ('client',)).fetchall()
-
-    # Fetch all accounts and calculate balances
-    accounts = cur.execute('SELECT * FROM accounts ORDER BY updated_at DESC').fetchall()
-    accounts_balance = sum(row['balance'] for row in accounts if row['balance'] is not None)
-    prior_accounts_balance = cur.execute(
-        'SELECT SUM(balance) FROM accounts WHERE created_at < ?', (current_month_start,)
-    ).fetchone()[0] or 0
-
-    # Fetch all dividends and payouts and calculate balances
-    account_ids = [row['id'] for row in accounts]
-    placeholders = ', '.join('?' for _ in account_ids)
-    if account_ids:
-        dividends_and_payouts = cur.execute(
-            f'SELECT * FROM dividends_payouts WHERE account_id IN ({placeholders})', tuple(account_ids)
-        ).fetchall()
-    else:
-        dividends_and_payouts = []
-    payouts_balance = sum(row['amount'] for row in dividends_and_payouts if row['amount'] is not None)
-    prior_payouts_balance = cur.execute(
-        'SELECT SUM(amount) FROM dividends_payouts WHERE created_at < ?', (current_month_start,)
-    ).fetchone()[0] or 0
-
-    # Fetch all client goals and calculate balances
-    client_goals = cur.execute('SELECT * FROM client_goals').fetchall()
-    client_goals_balance = sum(row['current_savings'] for row in client_goals if row['current_savings'] is not None)
-    prior_client_goals_balance = cur.execute(
-        'SELECT SUM(current_savings) FROM client_goals WHERE created_at < ?', (current_month_start,)
-    ).fetchone()[0] or 0
-
-    # Fetch all transactions and calculate balances
-    if account_ids:
-        placeholders = ', '.join('?' for _ in account_ids)
-        transactions = cur.execute(
-            f'SELECT * FROM transactions WHERE account_id IN ({placeholders})', tuple(account_ids)
-        ).fetchall()
-    else:
-        transactions = []
-    transactions_balance = sum(row['amount'] for row in transactions if row['amount'] is not None)
-    prior_transactions_balance = cur.execute(
-        'SELECT SUM(amount) FROM transactions WHERE created_at < ?', (current_month_start,)
-    ).fetchone()[0] or 0
-
-    # Fetch all investments and calculate balances
-    if account_ids:
-        placeholders = ', '.join('?' for _ in account_ids)
-        investments = cur.execute(
-            f'SELECT * FROM investments WHERE account_id IN ({placeholders})', tuple(account_ids)
-        ).fetchall()
-    else:
-        investments = []
-    investments_balance = sum(row['current_price'] for row in investments if row['current_price'] is not None)
-    prior_investments_balance = cur.execute(
-        'SELECT SUM(current_price) FROM investments WHERE created_at < ?', (current_month_start,)
-    ).fetchone()[0] or 0
-
-    cur.close()
-
-    return {
-        'profiles': [dict(row) for row in profiles],
-        'accounts': [dict(row) for row in accounts],
-        'accounts_balance': accounts_balance,
-        'prior_accounts_balance': prior_accounts_balance,
-        'dividends_and_payouts': [dict(row) for row in dividends_and_payouts],
-        'payouts_balance': payouts_balance,
-        'prior_payouts_balance': prior_payouts_balance,
-        'client_goals': [dict(row) for row in client_goals],
-        'client_goals_balance': client_goals_balance,
-        'prior_client_goals_balance': prior_client_goals_balance,
-        'transactions': [dict(row) for row in transactions],
-        'transactions_balance': transactions_balance,
-        'prior_transactions_balance': prior_transactions_balance,
-        'investments': [dict(row) for row in investments],
-        'investments_balance': investments_balance,
-        'prior_investments_balance': prior_investments_balance,
-    }
-
-
-def profile_data(profile_id: str):
-    # Fetch the specific profile
-    profile = cur.execute('SELECT * FROM profiles WHERE id = ?', (profile_id,)).fetchone()
-
-    # Fetch accounts for the profile and calculate balances
-    accounts = cur.execute(
-        'SELECT * FROM accounts WHERE profile_id = ? ORDER BY updated_at DESC', (profile_id,)
-    ).fetchall()
-    accounts_balance = sum(row['balance'] for row in accounts if row['balance'] is not None)
-    prior_accounts_balance = cur.execute(
-        'SELECT SUM(balance) FROM accounts WHERE profile_id = ? AND created_at < ?',
-        (profile_id, current_month_start)
-    ).fetchone()[0] or 0
-
-    # Fetch dividends and payouts for the accounts and calculate balances
-    create_dividends_payouts()
-    account_ids = [row['id'] for row in accounts]
-    placeholders = ', '.join('?' for _ in account_ids)
-    if account_ids:
-        dividends_and_payouts = cur.execute(
-            f'SELECT * FROM dividends_payouts WHERE account_id IN ({placeholders})', tuple(account_ids)
-        ).fetchall()
-    else:
-        dividends_and_payouts = []
-    payouts_balance = sum(row['amount'] for row in dividends_and_payouts if row['amount'] is not None)
-    prior_payouts_balance = cur.execute(
-        f'SELECT SUM(amount) FROM dividends_payouts WHERE account_id IN ({placeholders}) AND created_at < ?',
-        tuple(account_ids) + (current_month_start,)
-    ).fetchone()[0] or 0
-
-    # Fetch client goals for the profile and calculate balances
-    client_goals = cur.execute('SELECT * FROM client_goals WHERE profile_id = ?', (profile_id,)).fetchall()
-    client_goals_balance = sum(row['current_savings'] for row in client_goals if row['current_savings'] is not None)
-    prior_client_goals_balance = cur.execute(
-        'SELECT SUM(current_savings) FROM client_goals WHERE profile_id = ? AND created_at < ?',
-        (profile_id, current_month_start)
-    ).fetchone()[0] or 0
-
-    # Fetch transactions for the accounts and calculate balances
-    if account_ids:
-        placeholders = ', '.join('?' for _ in account_ids)
-        transactions = cur.execute(
-            f'SELECT * FROM transactions WHERE account_id IN ({placeholders})', tuple(account_ids)
-        ).fetchall()
-    else:
-        transactions = []
-    transactions_balance = sum(row['amount'] for row in transactions if row['amount'] is not None)
-    prior_transactions_balance = cur.execute(
-        f'SELECT SUM(amount) FROM transactions WHERE account_id IN ({placeholders}) AND created_at < ?',
-        tuple(account_ids) + (current_month_start,)
-    ).fetchone()[0] or 0
-
-    # Fetch investments for the accounts and calculate balances
-    if account_ids:
-        placeholders = ', '.join('?' for _ in account_ids)
-        investments = cur.execute(
-            f'SELECT * FROM investments WHERE account_id IN ({placeholders})', tuple(account_ids)
-        ).fetchall()
-    else:
-        investments = []
-    investments_balance = sum(row['current_price'] for row in investments if row['current_price'] is not None)
-    prior_investments_balance = cur.execute(
-        f'SELECT SUM(current_price) FROM investments WHERE account_id IN ({placeholders}) AND created_at < ?',
-        tuple(account_ids) + (current_month_start,)
-    ).fetchone()[0] or 0
-
-    cur.close()
-
-    return {
-        'profile': dict(profile) if profile else None,
-        'accounts': [dict(row) for row in accounts],
-        'accounts_balance': accounts_balance,
-        'prior_accounts_balance': prior_accounts_balance,
-        'dividends_and_payouts': [dict(row) for row in dividends_and_payouts],
-        'payouts_balance': payouts_balance,
-        'prior_payouts_balance': prior_payouts_balance,
-        'client_goals': [dict(row) for row in client_goals],
-        'client_goals_balance': client_goals_balance,
-        'prior_client_goals_balance': prior_client_goals_balance,
-        'transactions': [dict(row) for row in transactions],
-        'transactions_balance': transactions_balance,
-        'prior_transactions_balance': prior_transactions_balance,
-        'investments': [dict(row) for row in investments],
-        'investments_balance': investments_balance,
-        'prior_investments_balance': prior_investments_balance,
-    }
-
-
-def editor_graph_layout():
-    df = px.data.gapminder()
-    fig = px.scatter(
-        df.query("year==2007"), x="gdpPercap", y="lifeExp", size="pop", color="continent", hover_name="country",
-        log_x=True, size_max=60
-    )
-
-    return html.Div([
-        dcc.Graph(figure=fig)
-    ])
-
-
-def client_total_prior(profile_id: str):
-    return (
-        sum([
-            accounts_balance(profile_id=profile_id), payouts_balance(profile_id=profile_id),
-            client_goals_balance(profile_id=profile_id), transactions_balance(profile_id=profile_id),
-            investments_balance(profile_id=profile_id)
-        ]),
-        sum([
-            prior_accounts_balance(profile_id=profile_id), prior_payouts_balance(profile_id=profile_id),
-            prior_client_goals_balance(profile_id=profile_id), prior_transactions_balance(profile_id=profile_id),
-            prior_investments_balance(profile_id=profile_id)
-        ])
-    )
-
-
-def all_total_prior():
-    return (
-        sum([
-            all_accounts_balance, all_payouts_balance, all_client_goals_balance, all_transactions_balance,
-            all_investments_balance
-        ]),
-        sum([
-            all_prior_accounts_balance, all_prior_payouts_balance, all_prior_client_goals_balance,
-            all_prior_transactions_balance, all_prior_investments_balance
-        ])
-    )
-
-
-def card_header(total, prior):
-    difference = (total - prior) / prior * 100 if prior != 0 and total != 0 else 0
-    return [
-        'Compared to last month ',
-        html.Span([
-            html.Span(['+' if difference > 0 else '']),
-            f'{difference:.2f}'.replace(',', ' '), '%'
-        ], className='uk-text-bolder')
-    ]
-
-
-accounts_balance = lambda profile_id: cur.execute(
-    'SELECT SUM(balance) AS accounts_balance FROM accounts WHERE profile_id = ?', (profile_id,)
-).fetchone()[0] or 0
-prior_accounts_balance = lambda profile_id: cur.execute(
-    'SELECT SUM(balance) FROM accounts WHERE created_at < ? and profile_id = ?',
-    (current_month_start, profile_id,)
-).fetchone()[0] or 0
-payouts_balance = lambda profile_id: cur.execute(
-    'SELECT SUM(dp.amount) AS payouts_balance FROM dividends_payouts dp JOIN accounts a ON dp.account_id = '
-    'a.id WHERE a.profile_id = ?', (profile_id,)
-).fetchone()[0] or 0
-prior_payouts_balance = lambda profile_id: cur.execute(
-    'SELECT SUM(dp.amount) AS payouts_balance FROM dividends_payouts dp JOIN accounts a ON dp.account_id = '
-    'a.id WHERE dp.created_at < ? and a.profile_id = ?', (current_month_start, profile_id,)
-).fetchone()[0] or 0
-client_goals_balance = lambda profile_id: cur.execute(
-    'SELECT SUM(current_savings) AS client_goals_balance FROM client_goals WHERE profile_id = ?', (profile_id,)
-).fetchone()[0] or 0
-prior_client_goals_balance = lambda profile_id: cur.execute(
-    'SELECT SUM(current_savings) AS client_goals_balance FROM client_goals WHERE created_at < ? and '
-    'profile_id = ?', (current_month_start, profile_id,)
-).fetchone()[0] or 0
-transactions_balance = lambda profile_id: cur.execute(
-    'SELECT SUM(t.amount) AS transactions_balance FROM transactions t JOIN accounts a ON t.account_id = a.id '
-    'WHERE a.profile_id = ?', (profile_id,)
-).fetchone()[0] or 0
-prior_transactions_balance = lambda profile_id: cur.execute(
-    'SELECT SUM(t.amount) AS transactions_balance FROM transactions t JOIN accounts a ON t.account_id = a.id '
-    'WHERE t.created_at < ? and a.profile_id = ?', (current_month_start, profile_id,)
-).fetchone()[0] or 0
-investments_balance = lambda profile_id: cur.execute(
-    'SELECT SUM(i.current_price * i.quantity) AS investments_balance FROM investments i JOIN accounts a ON '
-    'i.account_id = a.id WHERE a.profile_id = ?', (profile_id,)
-).fetchone()[0] or 0
-prior_investments_balance = lambda profile_id: cur.execute(
-    'SELECT SUM(i.current_price * i.quantity) AS investments_balance FROM investments i JOIN accounts a ON '
-    'i.account_id = a.id WHERE i.created_at < ? and a.profile_id = ?', (current_month_start, profile_id,)
-).fetchone()[0] or 0
-
-all_accounts_balance = cur.execute(
-    'SELECT SUM(balance) AS accounts_balance FROM accounts GROUP BY profile_id'
-).fetchall() or 0
-all_prior_accounts_balance = cur.execute(
-    'SELECT profile_id, SUM(balance) FROM accounts WHERE created_at < ? GROUP BY profile_id',
-    (current_month_start,)
-).fetchall()
-all_payouts_balance = cur.execute(
-    'SELECT SUM(dp.amount) AS payouts_balance FROM dividends_payouts dp JOIN accounts a ON dp.account_id = a.id'
-).fetchone()[0] or 0
-all_prior_payouts_balance = cur.execute(
-    'SELECT SUM(dp.amount) AS payouts_balance FROM dividends_payouts dp JOIN accounts a ON dp.account_id = '
-    'a.id WHERE dp.created_at < ?', (current_month_start,)
-).fetchone()[0] or 0
-all_client_goals_balance = cur.execute(
-    'SELECT SUM(current_savings) AS client_goals_balance FROM client_goals'
-).fetchone()[0] or 0
-all_prior_client_goals_balance = cur.execute(
-    'SELECT SUM(current_savings) AS client_goals_balance FROM client_goals WHERE created_at < ?',
-    (current_month_start,)
-).fetchone()[0] or 0
-all_transactions_balance = cur.execute(
-    'SELECT SUM(t.amount) AS transactions_balance FROM transactions t JOIN accounts a ON t.account_id = a.id',
-).fetchone()[0] or 0
-all_prior_transactions_balance = cur.execute(
-    'SELECT SUM(t.amount) AS transactions_balance FROM transactions t JOIN accounts a ON t.account_id = a.id '
-    'WHERE t.created_at < ?', (current_month_start,)
-).fetchone()[0] or 0
-all_investments_balance = cur.execute(
-    'SELECT SUM(i.current_price * i.quantity) AS investments_balance FROM investments i JOIN accounts a ON '
-    'i.account_id = a.id'
-).fetchone()[0] or 0
-all_prior_investments_balance = cur.execute(
-    'SELECT SUM(i.current_price * i.quantity) AS investments_balance FROM investments i JOIN accounts a ON '
-    'i.account_id = a.id WHERE i.created_at < ?', (current_month_start,)
-).fetchone()[0] or 0
+# create_accounts()
+# create_profiles()
+# create_dividends_payouts()
+# create_client_goals()
+# create_transactions()
+# create_investments()
+#
+#
+# def all_profile_data():
+#     # Fetch all client profiles
+#     profiles = cur.execute('SELECT * FROM profiles WHERE profile_type = ?', ('client',)).fetchall()
+#
+#     # Fetch all accounts and calculate balances
+#     accounts = cur.execute('SELECT * FROM accounts ORDER BY updated_at DESC').fetchall()
+#     accounts_balance = sum(row['balance'] for row in accounts if row['balance'] is not None)
+#     prior_accounts_balance = cur.execute(
+#         'SELECT SUM(balance) FROM accounts WHERE created_at < ?', (current_month_start,)
+#     ).fetchone()[0] or 0
+#
+#     # Fetch all dividends and payouts and calculate balances
+#     account_ids = [row['id'] for row in accounts]
+#     placeholders = ', '.join('?' for _ in account_ids)
+#     if account_ids:
+#         dividends_and_payouts = cur.execute(
+#             f'SELECT * FROM dividends_payouts WHERE account_id IN ({placeholders})', tuple(account_ids)
+#         ).fetchall()
+#     else:
+#         dividends_and_payouts = []
+#     payouts_balance = sum(row['amount'] for row in dividends_and_payouts if row['amount'] is not None)
+#     prior_payouts_balance = cur.execute(
+#         'SELECT SUM(amount) FROM dividends_payouts WHERE created_at < ?', (current_month_start,)
+#     ).fetchone()[0] or 0
+#
+#     # Fetch all client goals and calculate balances
+#     client_goals = cur.execute('SELECT * FROM client_goals').fetchall()
+#     client_goals_balance = sum(row['current_savings'] for row in client_goals if row['current_savings'] is not None)
+#     prior_client_goals_balance = cur.execute(
+#         'SELECT SUM(current_savings) FROM client_goals WHERE created_at < ?', (current_month_start,)
+#     ).fetchone()[0] or 0
+#
+#     # Fetch all transactions and calculate balances
+#     if account_ids:
+#         placeholders = ', '.join('?' for _ in account_ids)
+#         transactions = cur.execute(
+#             f'SELECT * FROM transactions WHERE account_id IN ({placeholders})', tuple(account_ids)
+#         ).fetchall()
+#     else:
+#         transactions = []
+#     transactions_balance = sum(row['amount'] for row in transactions if row['amount'] is not None)
+#     prior_transactions_balance = cur.execute(
+#         'SELECT SUM(amount) FROM transactions WHERE created_at < ?', (current_month_start,)
+#     ).fetchone()[0] or 0
+#
+#     # Fetch all investments and calculate balances
+#     if account_ids:
+#         placeholders = ', '.join('?' for _ in account_ids)
+#         investments = cur.execute(
+#             f'SELECT * FROM investments WHERE account_id IN ({placeholders})', tuple(account_ids)
+#         ).fetchall()
+#     else:
+#         investments = []
+#     investments_balance = sum(row['current_price'] for row in investments if row['current_price'] is not None)
+#     prior_investments_balance = cur.execute(
+#         'SELECT SUM(current_price) FROM investments WHERE created_at < ?', (current_month_start,)
+#     ).fetchone()[0] or 0
+#
+#     cur.close()
+#
+#     return {
+#         'profiles': [dict(row) for row in profiles],
+#         'accounts': [dict(row) for row in accounts],
+#         'accounts_balance': accounts_balance,
+#         'prior_accounts_balance': prior_accounts_balance,
+#         'dividends_and_payouts': [dict(row) for row in dividends_and_payouts],
+#         'payouts_balance': payouts_balance,
+#         'prior_payouts_balance': prior_payouts_balance,
+#         'client_goals': [dict(row) for row in client_goals],
+#         'client_goals_balance': client_goals_balance,
+#         'prior_client_goals_balance': prior_client_goals_balance,
+#         'transactions': [dict(row) for row in transactions],
+#         'transactions_balance': transactions_balance,
+#         'prior_transactions_balance': prior_transactions_balance,
+#         'investments': [dict(row) for row in investments],
+#         'investments_balance': investments_balance,
+#         'prior_investments_balance': prior_investments_balance,
+#     }
+#
+#
+# def profile_data(profile_id: str):
+#     # Fetch the specific profile
+#     profile = cur.execute('SELECT * FROM profiles WHERE id = ?', (profile_id,)).fetchone()
+#
+#     # Fetch accounts for the profile and calculate balances
+#     accounts = cur.execute(
+#         'SELECT * FROM accounts WHERE profile_id = ? ORDER BY updated_at DESC', (profile_id,)
+#     ).fetchall()
+#     accounts_balance = sum(row['balance'] for row in accounts if row['balance'] is not None)
+#     prior_accounts_balance = cur.execute(
+#         'SELECT SUM(balance) FROM accounts WHERE profile_id = ? AND created_at < ?',
+#         (profile_id, current_month_start)
+#     ).fetchone()[0] or 0
+#
+#     # Fetch dividends and payouts for the accounts and calculate balances
+#     create_dividends_payouts()
+#     account_ids = [row['id'] for row in accounts]
+#     placeholders = ', '.join('?' for _ in account_ids)
+#     if account_ids:
+#         dividends_and_payouts = cur.execute(
+#             f'SELECT * FROM dividends_payouts WHERE account_id IN ({placeholders})', tuple(account_ids)
+#         ).fetchall()
+#     else:
+#         dividends_and_payouts = []
+#     payouts_balance = sum(row['amount'] for row in dividends_and_payouts if row['amount'] is not None)
+#     prior_payouts_balance = cur.execute(
+#         f'SELECT SUM(amount) FROM dividends_payouts WHERE account_id IN ({placeholders}) AND created_at < ?',
+#         tuple(account_ids) + (current_month_start,)
+#     ).fetchone()[0] or 0
+#
+#     # Fetch client goals for the profile and calculate balances
+#     client_goals = cur.execute('SELECT * FROM client_goals WHERE profile_id = ?', (profile_id,)).fetchall()
+#     client_goals_balance = sum(row['current_savings'] for row in client_goals if row['current_savings'] is not None)
+#     prior_client_goals_balance = cur.execute(
+#         'SELECT SUM(current_savings) FROM client_goals WHERE profile_id = ? AND created_at < ?',
+#         (profile_id, current_month_start)
+#     ).fetchone()[0] or 0
+#
+#     # Fetch transactions for the accounts and calculate balances
+#     if account_ids:
+#         placeholders = ', '.join('?' for _ in account_ids)
+#         transactions = cur.execute(
+#             f'SELECT * FROM transactions WHERE account_id IN ({placeholders})', tuple(account_ids)
+#         ).fetchall()
+#     else:
+#         transactions = []
+#     transactions_balance = sum(row['amount'] for row in transactions if row['amount'] is not None)
+#     prior_transactions_balance = cur.execute(
+#         f'SELECT SUM(amount) FROM transactions WHERE account_id IN ({placeholders}) AND created_at < ?',
+#         tuple(account_ids) + (current_month_start,)
+#     ).fetchone()[0] or 0
+#
+#     # Fetch investments for the accounts and calculate balances
+#     if account_ids:
+#         placeholders = ', '.join('?' for _ in account_ids)
+#         investments = cur.execute(
+#             f'SELECT * FROM investments WHERE account_id IN ({placeholders})', tuple(account_ids)
+#         ).fetchall()
+#     else:
+#         investments = []
+#     investments_balance = sum(row['current_price'] for row in investments if row['current_price'] is not None)
+#     prior_investments_balance = cur.execute(
+#         f'SELECT SUM(current_price) FROM investments WHERE account_id IN ({placeholders}) AND created_at < ?',
+#         tuple(account_ids) + (current_month_start,)
+#     ).fetchone()[0] or 0
+#
+#     cur.close()
+#
+#     return {
+#         'profile': dict(profile) if profile else None,
+#         'accounts': [dict(row) for row in accounts],
+#         'accounts_balance': accounts_balance,
+#         'prior_accounts_balance': prior_accounts_balance,
+#         'dividends_and_payouts': [dict(row) for row in dividends_and_payouts],
+#         'payouts_balance': payouts_balance,
+#         'prior_payouts_balance': prior_payouts_balance,
+#         'client_goals': [dict(row) for row in client_goals],
+#         'client_goals_balance': client_goals_balance,
+#         'prior_client_goals_balance': prior_client_goals_balance,
+#         'transactions': [dict(row) for row in transactions],
+#         'transactions_balance': transactions_balance,
+#         'prior_transactions_balance': prior_transactions_balance,
+#         'investments': [dict(row) for row in investments],
+#         'investments_balance': investments_balance,
+#         'prior_investments_balance': prior_investments_balance,
+#     }
+#
+#
+# def editor_graph_layout():
+#     df = px.data.gapminder()
+#     fig = px.scatter(
+#         df.query("year==2007"), x="gdpPercap", y="lifeExp", size="pop", color="continent", hover_name="country",
+#         log_x=True, size_max=60
+#     )
+#
+#     return html.Div([
+#         dcc.Graph(figure=fig)
+#     ])
+#
+#
+# def client_total_prior(profile_id: str):
+#     return (
+#         sum([
+#             accounts_balance(profile_id=profile_id), payouts_balance(profile_id=profile_id),
+#             client_goals_balance(profile_id=profile_id), transactions_balance(profile_id=profile_id),
+#             investments_balance(profile_id=profile_id)
+#         ]),
+#         sum([
+#             prior_accounts_balance(profile_id=profile_id), prior_payouts_balance(profile_id=profile_id),
+#             prior_client_goals_balance(profile_id=profile_id), prior_transactions_balance(profile_id=profile_id),
+#             prior_investments_balance(profile_id=profile_id)
+#         ])
+#     )
+#
+#
+# def all_total_prior():
+#     return (
+#         sum([
+#             all_accounts_balance, all_payouts_balance, all_client_goals_balance, all_transactions_balance,
+#             all_investments_balance
+#         ]),
+#         sum([
+#             all_prior_accounts_balance, all_prior_payouts_balance, all_prior_client_goals_balance,
+#             all_prior_transactions_balance, all_prior_investments_balance
+#         ])
+#     )
+#
+#
+# def card_header(total, prior):
+#     difference = (total - prior) / prior * 100 if prior != 0 and total != 0 else 0
+#     return [
+#         'Compared to last month ',
+#         html.Span([
+#             html.Span(['+' if difference > 0 else '']),
+#             f'{difference:.2f}'.replace(',', ' '), '%'
+#         ], className='uk-text-bolder')
+#     ]
+#
+#
+# accounts_balance = lambda profile_id: cur.execute(
+#     'SELECT SUM(balance) AS accounts_balance FROM accounts WHERE profile_id = ?', (profile_id,)
+# ).fetchone()[0] or 0
+# prior_accounts_balance = lambda profile_id: cur.execute(
+#     'SELECT SUM(balance) FROM accounts WHERE created_at < ? and profile_id = ?',
+#     (current_month_start, profile_id,)
+# ).fetchone()[0] or 0
+# payouts_balance = lambda profile_id: cur.execute(
+#     'SELECT SUM(dp.amount) AS payouts_balance FROM dividends_payouts dp JOIN accounts a ON dp.account_id = '
+#     'a.id WHERE a.profile_id = ?', (profile_id,)
+# ).fetchone()[0] or 0
+# prior_payouts_balance = lambda profile_id: cur.execute(
+#     'SELECT SUM(dp.amount) AS payouts_balance FROM dividends_payouts dp JOIN accounts a ON dp.account_id = '
+#     'a.id WHERE dp.created_at < ? and a.profile_id = ?', (current_month_start, profile_id,)
+# ).fetchone()[0] or 0
+# client_goals_balance = lambda profile_id: cur.execute(
+#     'SELECT SUM(current_savings) AS client_goals_balance FROM client_goals WHERE profile_id = ?', (profile_id,)
+# ).fetchone()[0] or 0
+# prior_client_goals_balance = lambda profile_id: cur.execute(
+#     'SELECT SUM(current_savings) AS client_goals_balance FROM client_goals WHERE created_at < ? and '
+#     'profile_id = ?', (current_month_start, profile_id,)
+# ).fetchone()[0] or 0
+# transactions_balance = lambda profile_id: cur.execute(
+#     'SELECT SUM(t.amount) AS transactions_balance FROM transactions t JOIN accounts a ON t.account_id = a.id '
+#     'WHERE a.profile_id = ?', (profile_id,)
+# ).fetchone()[0] or 0
+# prior_transactions_balance = lambda profile_id: cur.execute(
+#     'SELECT SUM(t.amount) AS transactions_balance FROM transactions t JOIN accounts a ON t.account_id = a.id '
+#     'WHERE t.created_at < ? and a.profile_id = ?', (current_month_start, profile_id,)
+# ).fetchone()[0] or 0
+# investments_balance = lambda profile_id: cur.execute(
+#     'SELECT SUM(i.current_price * i.quantity) AS investments_balance FROM investments i JOIN accounts a ON '
+#     'i.account_id = a.id WHERE a.profile_id = ?', (profile_id,)
+# ).fetchone()[0] or 0
+# prior_investments_balance = lambda profile_id: cur.execute(
+#     'SELECT SUM(i.current_price * i.quantity) AS investments_balance FROM investments i JOIN accounts a ON '
+#     'i.account_id = a.id WHERE i.created_at < ? and a.profile_id = ?', (current_month_start, profile_id,)
+# ).fetchone()[0] or 0
+#
+# all_accounts_balance = cur.execute(
+#     'SELECT SUM(balance) AS accounts_balance FROM accounts GROUP BY profile_id'
+# ).fetchall() or 0
+# all_prior_accounts_balance = cur.execute(
+#     'SELECT profile_id, SUM(balance) FROM accounts WHERE created_at < ? GROUP BY profile_id',
+#     (current_month_start,)
+# ).fetchall()
+# all_payouts_balance = cur.execute(
+#     'SELECT SUM(dp.amount) AS payouts_balance FROM dividends_payouts dp JOIN accounts a ON dp.account_id = a.id'
+# ).fetchone()[0] or 0
+# all_prior_payouts_balance = cur.execute(
+#     'SELECT SUM(dp.amount) AS payouts_balance FROM dividends_payouts dp JOIN accounts a ON dp.account_id = '
+#     'a.id WHERE dp.created_at < ?', (current_month_start,)
+# ).fetchone()[0] or 0
+# all_client_goals_balance = cur.execute(
+#     'SELECT SUM(current_savings) AS client_goals_balance FROM client_goals'
+# ).fetchone()[0] or 0
+# all_prior_client_goals_balance = cur.execute(
+#     'SELECT SUM(current_savings) AS client_goals_balance FROM client_goals WHERE created_at < ?',
+#     (current_month_start,)
+# ).fetchone()[0] or 0
+# all_transactions_balance = cur.execute(
+#     'SELECT SUM(t.amount) AS transactions_balance FROM transactions t JOIN accounts a ON t.account_id = a.id',
+# ).fetchone()[0] or 0
+# all_prior_transactions_balance = cur.execute(
+#     'SELECT SUM(t.amount) AS transactions_balance FROM transactions t JOIN accounts a ON t.account_id = a.id '
+#     'WHERE t.created_at < ?', (current_month_start,)
+# ).fetchone()[0] or 0
+# all_investments_balance = cur.execute(
+#     'SELECT SUM(i.current_price * i.quantity) AS investments_balance FROM investments i JOIN accounts a ON '
+#     'i.account_id = a.id'
+# ).fetchone()[0] or 0
+# all_prior_investments_balance = cur.execute(
+#     'SELECT SUM(i.current_price * i.quantity) AS investments_balance FROM investments i JOIN accounts a ON '
+#     'i.account_id = a.id WHERE i.created_at < ?', (current_month_start,)
+# ).fetchone()[0] or 0

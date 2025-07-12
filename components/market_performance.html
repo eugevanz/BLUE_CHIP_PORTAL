@@ -1,0 +1,98 @@
+<div class="market-performance">
+    <div>
+        <!-- Card Header with Dropdown and Market Performance -->
+        <div class="uk-card-header">
+            <div class="uk-flex uk-flex-between uk-flex-bottom">
+                <div>
+                    <div class="uk-light">
+                        <div>Market performance</div>
+                        <h2 class="uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate"
+                            id="current-price"></h2>
+                        <div class="uk-text-small uk-margin-remove-top">
+                            Compared to previous close
+                            <span class="uk-text-bolder" id="price-change"></span>
+                            <span>%</span>
+                        </div>
+                    </div>
+                    <dcc-dropdown class="uk-width-small" clearable="false" id="ticker-dropdown">
+                        <option value="^GSPC">S&P 500</option>
+                        <option value="^IXIC">NASDAQ</option>
+                        <option value="^DJI">Dow Jones</option>
+                        <option value="^FTSE">FTSE 100</option>
+                        <option value="MSFT">Microsoft (MSFT)</option>
+                        <option value="AAPL">Apple (AAPL)</option>
+                        <option value="GOOGL">Google (GOOGL)</option>
+                    </dcc-dropdown>
+                </div>
+            </div>
+        </div>
+
+        <!-- Graph and Y-Ticks Section -->
+        <div class="uk-card-body uk-light">
+            <div class="uk-grid-divider uk-child-width-expand uk-grid-small" data-uk-grid>
+                <div class="uk-width-auto">
+                    <div class="uk-flex uk-flex-column uk-height-medium" id="y-ticks" style="font-size: 8px"></div>
+                </div>
+                <div>
+                    <dcc-graph config="displayModeBar: false" id="market-graph" style="height: 300px"></dcc-graph>
+                    <hr/>
+                    <div class="uk-flex uk-flex-between" id="x-ticks" style="font-size: 8px"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Market Performance Details -->
+        <div class="uk-card-footer uk-light">
+            <div class="uk-flex uk-flex-between">
+                <!-- MSFT Performance -->
+                <div>
+                    <div style="font-size: 11px">MSFT</div>
+                    <div class="uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate">
+                        R {{ msft_current_price:,.2f }}
+                    </div>
+                    <div class="uk-text-small uk-margin-remove-top">
+                        {{ msft_change:,.2f }}%
+                        <span class="uk-text-{{'success' if msft_change > 0 else 'danger'}}"
+                              data-uk-icon="triangle-{{'up' if msft_change > 0 else 'down'}}"></span>
+                    </div>
+                </div>
+                <!-- NASDAQ Performance -->
+                <div>
+                    <div style="font-size: 11px">NASDAQ</div>
+                    <div class="uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate">
+                        R {{ nasdaq_current_price:,.2f }}
+                    </div>
+                    <div class="uk-text-small uk-margin-remove-top">
+                        {{ nasdaq_change:,.2f }}%
+                        <span class="uk-text-{{'success' if nasdaq_change > 0 else 'danger'}}"
+                              data-uk-icon="triangle-{{'up' if nasdaq_change > 0 else 'down'}}"></span>
+                    </div>
+                </div>
+                <!-- Dow Jones Performance -->
+                <div>
+                    <div style="font-size: 11px">Dow Jones</div>
+                    <div class="uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate">
+                        R {{ jones_current_price:,.2f }}
+                    </div>
+                    <div class="uk-text-small uk-margin-remove-top">
+                        {{ jones_change:,.2f }}%
+                        <span class="uk-text-{{'success' if jones_change > 0 else 'danger'}}"
+                              data-uk-icon="triangle-{{'up' if jones_change > 0 else 'down'}}"></span>
+                    </div>
+                </div>
+                <!-- FTSE 100 Performance -->
+                <div>
+                    <div style="font-size: 11px">FTSE 100</div>
+                    <div class="uk-text-bolder uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate">
+                        R {{ ftse_current_price:,.2f }}
+                    </div>
+                    <div class="uk-text-small uk-margin-remove-top">
+                        {{ ftse_change:,.2f }}%
+                        <span class="uk-text-{{'success' if ftse_change > 0 else 'danger'}}"
+                              data-uk-icon="triangle-{{'up' if ftse_change > 0 else 'down'}}"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

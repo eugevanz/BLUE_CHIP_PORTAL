@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.15.10/css/uikit.min.css" rel="stylesheet">
+    <link href='https://fonts.googleapis.com' rel="stylesheet">
+    <link href='https://fonts.gstatic.com' rel="stylesheet">
+    <link href='https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap'
+          rel="stylesheet">
+    <link href='https://oujdrprpkkwxeavzbaow.supabase.co/storage/v1/object/public/website_images/favicon.ico' rel='icon'
+          type='image/x-icon'>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.15.10/js/uikit.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.15.10/js/uikit-icons.min.js"></script>
+    <title>Add a new client goal</title>
+</head>
+<body class="uk-background-secondary uk-light">
+<nav class="uk-navbar">
+    <ul>
+        <li><a href="/admin/{profile_id}/">Admin</a></li>
+        <li><a href="/edit/{profile_id}/">Edit Profile ({profile.email})</a></li>
+        <li><a href="#">Add Client Goal</a></li>
+    </ul>
+</nav>
+
+<!-- Main Content -->
+<div class="uk-section uk-section-small">
+    <div class="uk-container">
+        <div class="uk-child-width-1-2@m" data-uk-grid="masonry: pack">
+            <!-- Add Client Goal Form -->
+            <div class="uk-card uk-card-body uk-margin-large-bottom">
+                <h3>Add Client Goal</h3>
+                <p class="uk-text-meta">
+                    Adding client goals involves setting up specific, measurable objectives tailored
+                    to each client’s financial plan. This process typically includes defining the
+                    goal (e.g., saving a certain amount by a target date), establishing milestones,
+                    and tracking progress over time. Visual representations, such as progress bars
+                    or gauge charts, are often used to display these goals within a dashboard,
+                    making it easy for both the client and advisor to monitor achievement levels.
+                </p>
+
+                <!-- Target Date Picker -->
+                <div class="uk-margin">
+                    <div class="uk-text-small">Target Date</div>
+                    <input class="uk-width-large" id="target_date" type="date" value="2024-12-10">
+                </div>
+
+                <!-- Goal Type Dropdown -->
+                <div class="uk-margin">
+                    <div class="uk-text-small">Goal</div>
+                    <select class="uk-select uk-text-bolder uk-margin-remove-top" id="goal_type">
+                        <option value="Retirement Savings">Retirement Savings</option>
+                        <option value="Emergency Fund">Emergency Fund</option>
+                        <option value="Education Fund">Education Fund</option>
+                        <option value="Home Purchase">Home Purchase</option>
+                        <option value="Debt Reduction">Debt Reduction</option>
+                        <option value="Vacation Fund">Vacation Fund</option>
+                        <option value="Investment Growth">Investment Growth</option>
+                        <option value="Business Start-Up">Business Start-Up</option>
+                        <option value="Charitable Giving">Charitable Giving</option>
+                        <option value="Wealth Accumulation">Wealth Accumulation</option>
+                        <option value="Major Purchase">Major Purchase</option>
+                        <option value="Health and Wellness">Health and Wellness</option>
+                        <option value="Estate Planning">Estate Planning</option>
+                        <option value="Early Retirement">Early Retirement</option>
+                        <option value="Legacy Planning">Legacy Planning</option>
+                    </select>
+                </div>
+
+                <!-- Current Savings Input -->
+                <div class="uk-margin">
+                    <div class="uk-text-small">Current Savings</div>
+                    <div class="uk-inline">
+                        <span class="uk-form-icon" data-uk-icon="icon: bag"></span>
+                        <input class="uk-input uk-text-bolder uk-form-width-large" id="current_savings"
+                               placeholder="Current Savings" type="number">
+                    </div>
+                </div>
+
+                <!-- Target Amount Input -->
+                <div class="uk-margin">
+                    <div class="uk-text-small">Target Amount</div>
+                    <div class="uk-inline">
+                        <span class="uk-form-icon" data-uk-icon="icon: bag"></span>
+                        <input class="uk-input uk-text-bolder uk-form-width-large" id="target_amount"
+                               placeholder="Target Amount"
+                               type="number">
+                    </div>
+                </div>
+
+                <!-- Save Button -->
+                <button class="uk-button uk-button-primary uk-margin" id="add-goa-btn">Save</button>
+            </div>
+
+            <!-- Dynamic Performance Sections -->
+            <div id="client_goal_performance">
+                <!-- Client goal performance content (dynamically filled) -->
+            </div>
+            <div id="account_performance">
+                <!-- Account performance content (dynamically filled) -->
+            </div>
+            <div id="dividend_performance">
+                <!-- Dividend performance content (dynamically filled) -->
+            </div>
+            <div id="investment_performance">
+                <!-- Investment performance content (dynamically filled) -->
+            </div>
+            <div id="transaction_performance">
+                <!-- Transaction performance content (dynamically filled) -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer>
+    <div class="footer">
+        <!-- Footer content here -->
+    </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<div class="dividend-performance" className="order">
+    <!-- Stores for dividend data -->
+    <div data="dividends_payouts" id="name"></div>
+    <div data="profile_id" id="profile_id"></div>
+
+    <div class="uk-card uk-card-default" style="background-color: custom_colours[-1];">
+        <!-- Card Header -->
+        <div class="uk-card-header">
+            <div class="uk-text-small">Dividend/Payout performance</div>
+            <span id="total_summary"></span>
+            <div class="uk-text-small uk-margin-remove-top" id="card_header"></div>
+        </div>
+
+        <!-- Card Body -->
+        <div class="uk-card-body">
+            <div class="uk-grid-divider uk-child-width-expand uk-grid-small" data-uk-grid="true">
+                <div class="uk-width-auto">
+                    <div class="uk-flex uk-flex-column uk-height-medium" style="font-size: 8px;">
+                        <div id="highest_"></div>
+                        <div class="uk-margin-auto-vertical" id="mid_"></div>
+                        <div id="lowest_"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <!-- Graph -->
+                    <div>
+                        <div id="payouts_fig" style="height: 300px;"></div>
+                        <hr/>
+                        <div class="uk-flex uk-flex-between" id="legend" style="font-size: 8px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,54 @@
+<div class="uk-width-3-4@m">
+    <div>
+        <!-- Account Card -->
+        <div class="uk-card uk-card-default uk-light" style="background-color: #custom_color;">
+            <div class="uk-card-header">
+                <span class="uk-text-bolder">Accounts</span>
+                <span id="total_summary"></span>
+                <div class="uk-text-small uk-margin-remove-top" id="card_header"></div>
+            </div>
+            <div class="uk-card-body">
+                <!-- Account Table -->
+                <div class="uk-overflow-auto uk-height-large">
+                    <table class="uk-table uk-table-middle uk-table-divider uk-table-hover">
+                        <thead>
+                        <tr>
+                            <th class="uk-table-shrink"></th>
+                            <th class="uk-table-expand">Balance</th>
+                            <th class="uk-table-expand">Account Type</th>
+                            <th class="uk-table-expand">Account</th>
+                            <th class="uk-table-expand">Last Update</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <!-- Dynamically populated account rows -->
+                        <!-- Example Account -->
+                        <tr>
+                            <!-- Delete Item -->
+                            <td><a class="uk-icon-button" href="#" uk-icon="trash"></a></td>
+                            <td>R 1,000.00</td>
+                            <td class="uk-text-bolder uk-text-uppercase">Savings</td>
+                            <td>1234567890</td>
+                            <td class="uk-text-muted">01 Jan 2024</td>
+                        </tr>
+                        <tr>
+                            <td><a class="uk-icon-button" href="#" uk-icon="trash"></a></td>
+                            <td>R 2,500.00</td>
+                            <td class="uk-text-bolder uk-text-uppercase">Checking</td>
+                            <td>9876543210</td>
+                            <td class="uk-text-muted">15 Dec 2023</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="uk-card-footer">
+                <!-- Add Account Button -->
+                <a class="uk-button uk-button-text uk-flex uk-flex-middle" href="/add-account/PROFILE_ID/">
+                    <span class="uk-margin-small-right" uk-icon="icon: plus; ratio: 0.6"></span>
+                    Add Account
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,103 @@
+<div class="uk-width-1-5@m">
+    <div>
+        <div class="uk-card">
+            <!-- Profile Header -->
+            <div class="uk-card-header">
+                <img alt="profile-pic" class="uk-border-circle uk-margin" height="44" id="profile-picture-url"
+                     width="44">
+                <div class="uk-text-small">Administrator</div>
+                <h3 class="uk-margin-remove-top uk-margin-remove-bottom uk-text-truncate">
+                    <span class="uk-text-bolder" id="first-name"></span><br>
+                    <span id="last-name"></span>
+                </h3>
+                <div class="uk-text-small uk-margin-remove-top" id="email"></div>
+            </div>
+
+            <!-- Navigation Menu -->
+            <div class="uk-card-body">
+                <ul class="uk-nav uk-nav-default">
+                    <li class="uk-nav-header">Support</li>
+
+                    <!-- Send Invite Section -->
+                    <li>
+                        <a class="uk-link-reset" data-uk-toggle="target: #offcanvas-invite">Send an invite</a>
+                        <div data-uk-offcanvas="mode: push; overlay: true" id="offcanvas-invite">
+                            <div class="uk-offcanvas-bar">
+                                <h3 class="uk-heading-bullet">Send an invite</h3>
+                                <p class="uk-text-small uk-margin-remove-top">
+                                    Please enter the recipient's email address so we know who you’re sending to.
+                                </p>
+                                <div class="uk-text-meta">Email</div>
+                                <div class="uk-inline uk-width-1-1">
+                                    <span class="uk-form-icon" data-uk-icon="icon: mail"></span>
+                                    <input class="uk-input" id="form-invite-email" type="email">
+                                </div>
+                                <div class="uk-margin">
+                                    <button class="uk-button uk-button-large uk-width-1-1 uk-light"
+                                            id="form-invite-button" n_clicks="0" style="background-color: #88A9C3;">
+                                        Send Invite
+                                    </button>
+                                </div>
+                                <p class="uk-margin" id="invite-notifications"></p>
+                            </div>
+                        </div>
+                    </li>
+
+                    <!-- Client Management -->
+                    <li>
+                        <a class="uk-link-reset" data-uk-scroll="true" href="#client-insights">Client Management</a>
+                    </li>
+
+                    <!-- Audit Logs Section -->
+                    <li>
+                        <a class="uk-link-reset" data-uk-toggle="target: #offcanvas-audit">Audit Logs</a>
+                        <div data-uk-offcanvas="mode: push; overlay: true" id="offcanvas-audit">
+                            <div class="uk-offcanvas-bar">
+                                <h3 class="uk-heading-bullet">Audit Logs</h3>
+                                <p class="uk-text-small uk-margin-remove-top">
+                                    Review and analyze system-generated records to monitor user actions, ensure security
+                                    and compliance, diagnose issues, and maintain operational insights.
+                                </p>
+                                <table class="uk-table uk-table-divider">
+                                    <caption class="uk-text-bolder">Recent Updates</caption>
+                                    <tbody>
+                                    <!-- Account Row -->
+                                    <tr>
+                                        <td id="recent-account-type"></td>
+                                        <td id="recent-account-update"></td>
+                                    </tr>
+                                    <!-- Goal Row -->
+                                    <tr>
+                                        <td id="recent-goal-type"></td>
+                                        <td id="recent-goal-update"></td>
+                                    </tr>
+                                    <!-- Payout Row -->
+                                    <tr>
+                                        <td>Recent payout</td>
+                                        <td id="recent-payout-update"></td>
+                                    </tr>
+                                    <!-- Investment Row -->
+                                    <tr>
+                                        <td id="recent-investment-type"></td>
+                                        <td id="recent-investment-update"></td>
+                                    </tr>
+                                    <!-- Transaction Row -->
+                                    <tr>
+                                        <td class="uk-text-uppercase" id="recent-transaction-type"></td>
+                                        <td id="recent-transaction-update"></td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </li>
+
+                    <!-- Sign Out Button -->
+                    <li>
+                        <a class="uk-link-reset" href="/sign-out">Sign Out</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

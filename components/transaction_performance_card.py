@@ -5,9 +5,9 @@ from dash import html, dcc, Input, Output, callback
 from utils import custom_colours, fig_layout, cur
 
 
-def transaction_performance(order: str = None, dark: bool = True):
+def transaction_performance(profile_id: str, order: str = None, dark: bool = True):
     return html.Div([
-        dcc.Store('profile_id'),
+        dcc.Store('profile_id', data=profile_id),
         dcc.Store('name', data='transactions'),
         html.Div([
             html.Div([

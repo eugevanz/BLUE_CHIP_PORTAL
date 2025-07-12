@@ -1,9 +1,6 @@
-dash
-supabase~=2.8.1
+supabase
 shortnumbers
-gunicorn
 numpy
-sqlalchemy
-psycopg2-binary
 yfinance
-libsql-experimental
+fastapi
+uvicorn

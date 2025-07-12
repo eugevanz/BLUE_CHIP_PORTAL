@@ -11,33 +11,18 @@ from components.footer_section import footer
 from components.investment_performance_card import investment_performance
 from components.navbar import navbar
 from components.transaction_performance_card import transaction_performance
-from utils import ClientGoal, engine, profile_data
+from utils import ClientGoal, engine, supabase
 
 dash.register_page(__name__, path_template='/add-client-goal/<profile_id>/', name='Add Client Goal')
 
 
 def layout(profile_id: str):
-    data = profile_data(profile_id)
-    profile = data['profile']
-    accounts = data['accounts']
-    accounts_balance = data['accounts_balance']
-    prior_accounts_balance = data['prior_accounts_balance']
-    dividends_and_payouts = data['dividends_and_payouts']
-    payouts_balance = data['payouts_balance']
-    prior_payouts_balance = data['prior_payouts_balance']
-    client_goals = data['client_goals']
-    client_goals_balance = data['client_goals_balance']
-    prior_client_goals_balance = data['prior_client_goals_balance']
-    transactions = data['transactions']
-    transactions_balance = data['transactions_balance']
-    prior_transactions_balance = data['prior_transactions_balance']
-    investments = data['investments']
-    investments_balance = data['investments_balance']
-    prior_investments_balance = data['prior_investments_balance']
+    profile_response = supabase.table('profiles').select('*').eq('id', profile_id).limit(1).single().execute()
+    profile = profile_response.data
 
     return html.Div([
         dcc.Location(id='goal-url'),
-        dcc.Store(id='profile-id-store', data=profile_id),
+        dcc.Store(id='profile-id'),
         navbar([
             ('Admin', f'/admin/{profile_id}/'), (f'Edit Profile ({profile.email})', f'/edit/{profile_id}/'),
             ('Add Client Goal', '')

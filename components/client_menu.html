@@ -1,0 +1,66 @@
+<div class="uk-card" style="width: 20%;">
+    <!-- Stores for profile data -->
+    <div id="profile_picture_url"></div>
+    <div id="first_name"></div>
+    <div id="last_name"></div>
+    <div id="email"></div>
+
+    <div class="uk-card-header">
+        <img alt="profile-pic" class="uk-border-circle" height="44" id="picture_url" width="44"/>
+        <h3 class="uk-margin-remove-bottom uk-margin-remove-top uk-text-truncate">
+            <span class="uk-text-bolder" id="profile_first_name"></span><br/>
+            <span id="profile_last_name"></span>
+        </h3>
+        <div class="uk-text-small uk-margin-remove-top" id="profile_email"></div>
+    </div>
+
+    <div class="uk-card-body">
+        <ul class="uk-nav uk-nav-default">
+            <li>
+                <a class="uk-flex uk-flex-middle uk-link-reset" data-uk-toggle="target: #messages">
+                    <span class="uk-margin-small-right" data-uk-icon="icon: mail"></span>Messages
+                </a>
+                <div data-uk-offcanvas="mode: push; overlay: true" id="messages">
+                    <div class="uk-offcanvas-bar">
+                        <button class="uk-offcanvas-close" data-uk-close="true"></button>
+                        <h3>Messages</h3>
+                        <!-- Dynamic message content will be inserted here -->
+                        <div class="uk-flex uk-flex-wrap">
+                            <article class="uk-article">
+                                <div data-uk-icon="icon: mail"></div>
+                                <p class="uk-article-meta">Meta info</p>
+                                <p class="uk-text-bolder">Header</p>
+                                <p>Article content</p>
+                            </article>
+                        </div>
+                    </div>
+                </div>
+            </li>
+            <li class="uk-nav-divider uk-margin"></li>
+            <li class="uk-nav-header">Support</li>
+            <li>
+                <a class="uk-link-reset" data-uk-toggle="target: #contact-support" href="#">Contact Support</a>
+                <div data-uk-offcanvas="mode: push; overlay: true" id="contact-support">
+                    <div class="uk-offcanvas-bar">
+                        <button class="uk-offcanvas-close" data-uk-close="true"></button>
+                        <h3>Contact Support</h3>
+                        <div class="uk-grid-match uk-child-width-1-1 uk-margin-medium-top" data-uk-grid="true">
+                            <div class="uk-margin">
+                                <div class="uk-icon" data-uk-icon="icon: location; ratio: 1.8"></div>
+                                <div class="uk-text-large uk-text-bolder">Location</div>
+                                <div class="uk-text-small">Unit 17, No.30 Surprise Road, Pinetown, 3610</div>
+                            </div>
+                            <div class="uk-margin">
+                                <div class="uk-icon" data-uk-icon="icon: receiver; ratio: 1.8"></div>
+                                <div class="uk-text-large uk-text-bolder">Phone</div>
+                                <div class="uk-text-small">0860 258 2447</div>
+                            </div>
+                            <div class="uk-margin">
+                                <div class="uk-icon" data-uk-icon="icon: mail; ratio: 1.8"></div>
+                                <div class="uk-text-large uk-text-bolder">Email</div>
+                                <div class="uk-text-small">info@bluechipinvest.co.za</div>
+                            </div>
+                            <div class="uk-margin">
+                                <div class="uk-icon" data-uk-icon="icon: clock; ratio: 1.8"></div>
+                                <div class="uk-text-large uk-text-bolder">Open hours</div>
+                                <div class="uk-text-small">Mon

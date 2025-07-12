@@ -5,11 +5,11 @@ from dash import html, dcc, Output, Input, callback
 from utils import fig_layout, custom_colours, cur
 
 
-def investment_performance(order: str = None, dark: bool = True):
+def investment_performance(profile_id: str, order: str = None, dark: bool = True):
     return html.Div([
         dcc.Store('name', data='investments'),
         dcc.Store('column', data='current_price'),
-        dcc.Store('profile_id'),
+        dcc.Store('profile_id', data=profile_id),
         html.Div([
             html.Div([
                 html.Div('Investments performance', className='uk-text-small'),

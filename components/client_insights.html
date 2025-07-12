@@ -1,0 +1,48 @@
+<div class="uk-card uk-card-default uk-light" style="background-color: #5D9E8C;">
+    <!-- Store for holding selected profile ID -->
+    <div id="selected-profile-id"></div>
+
+    <div class="uk-card-header">
+        <div class="uk-text-small">Client Insights</div>
+        <div>R 100,000.00</div> <!-- All accounts balance, should be dynamically inserted -->
+        <div class="uk-text-small uk-margin-remove-top">
+            <!-- Card header dynamic content -->
+            <div>Balance Change: R 10,000.00</div> <!-- Prior account balance info, dynamically inserted -->
+        </div>
+    </div>
+
+    <div class="uk-card-body">
+        <div class="uk-overflow-auto uk-height-large">
+            <table class="uk-table uk-table-middle uk-table-divider uk-table-hover">
+                <tbody>
+                <!-- Repeat for each profile -->
+                <tr>
+                    <td class="uk-flex uk-flex-middle uk-flex-between uk-margin-left uk-margin-right">
+                        <a class="uk-grid-small uk-link-reset" data-uk-grid="true" href="/edit/123/">
+                            <div class="uk-width-auto">
+                                <img alt="profile-pic" class="uk-border-circle" height="60" src="profile_pic_url.jpg"
+                                     width="60"/>
+                            </div>
+                            <div class="uk-width-expand">
+                                <h3 class="uk-card-title uk-margin-remove-bottom">
+                                    <span class="uk-text-bolder">First Name</span><br/>
+                                    Last Name
+                                </h3>
+                                <div style="font-size: 11px;">email@example.com</div>
+                            </div>
+                        </a>
+                    </td>
+                </tr>
+                <!-- Repeat above for other profiles -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="uk-card-footer">
+        <form>
+            <span data-uk-search-icon="true"></span>
+            <input class="uk-search-input" id="client-search" placeholder="Search" type="search"/>
+        </form>
+    </div>
+</div>

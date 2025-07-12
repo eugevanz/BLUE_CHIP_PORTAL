@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.15.10/css/uikit.min.css" rel="stylesheet">
+    <link href='https://fonts.googleapis.com' rel="stylesheet">
+    <link href='https://fonts.gstatic.com' rel="stylesheet">
+    <link href='https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap'
+          rel="stylesheet">
+    <link href='https://oujdrprpkkwxeavzbaow.supabase.co/storage/v1/object/public/website_images/favicon.ico' rel='icon'
+          type='image/x-icon'>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.15.10/js/uikit.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.15.10/js/uikit-icons.min.js"></script>
+    <title>Add a new transaction</title>
+</head>
+<body>
+<nav class="uk-navbar-container" uk-navbar>
+    <div class="uk-navbar-left">
+        <ul class="uk-navbar-nav">
+            <li><a href="/admin/PROFILE_ID/">Admin</a></li>
+            <li><a href="/edit/PROFILE_ID/">Edit Profile (PROFILE_EMAIL)</a></li>
+            <li><a href="#">Add Transaction</a></li>
+        </ul>
+    </div>
+</nav>
+
+<!-- Main Content -->
+<div class="uk-section uk-section-small">
+    <div class="uk-container">
+        <div class="uk-grid uk-child-width-1-2@m" uk-grid>
+
+            <!-- Add Transaction Form -->
+            <div class="uk-card uk-card-body uk-margin-large-bottom">
+                <h3>Add Transaction</h3>
+                <p class="uk-text-meta">
+                    Adding a transaction involves recording a financial event, typically either a debit (expense) or a
+                    credit (income), associated with a client’s account.
+                </p>
+
+                <!-- Select Account -->
+                <div class="uk-margin">
+                    <div class="uk-text-small">Select Account</div>
+                    <div class="uk-text-bolder uk-margin-remove-top">
+                        <select class="uk-select" id="account_id">
+                            <!-- Dynamically populate account options -->
+                            <option value="ACCOUNT_ID">Account 1</option>
+                            <option value="ACCOUNT_ID_2">Account 2</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Transaction Type -->
+                <div class="uk-margin">
+                    <div class="uk-text-small">Transaction Type</div>
+                    <div class="uk-text-bolder uk-margin-remove-top">
+                        <select class="uk-select" id="trans_type">
+                            <option value="debit">Debit</option>
+                            <option value="credit">Credit</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div class="uk-margin">
+                    <div class="uk-text-small">Description</div>
+                    <div class="uk-inline">
+                        <span class="uk-form-icon" uk-icon="icon: info"></span>
+                        <input class="uk-input uk-text-bolder uk-form-width-large" id="description" placeholder="Transaction Description"
+                               type="text">
+                    </div>
+                </div>
+
+                <!-- Transaction Amount -->
+                <div class="uk-margin">
+                    <div class="uk-text-small">Transaction Amount</div>
+                    <div class="uk-inline">
+                        <span class="uk-form-icon" uk-icon="icon: bag"></span>
+                        <input class="uk-input uk-text-bolder uk-form-width-large" id="amount" placeholder="Transaction Amount"
+                               type="number">
+                    </div>
+                </div>
+
+                <!-- Save Button -->
+                <button class="uk-button uk-button-primary uk-margin" id="add-tra-btn">Save</button>
+            </div>
+
+            <!-- Performance Metrics (Placeholder Sections) -->
+            <div>
+                <div class="uk-card uk-card-body uk-margin-large-bottom">
+                    <h3>Transaction Performance</h3>
+                    <p>Performance data for transactions will go here.</p>
+                </div>
+                <div class="uk-card uk-card-body uk-margin-large-bottom">
+                    <h3>Account Performance</h3>
+                    <p>Account performance data will go here.</p>
+                </div>
+                <div class="uk-card uk-card-body uk-margin-large-bottom">
+                    <h3>Dividend/Payout Performance</h3>
+                    <p>Dividend and payout performance data will go here.</p>
+                </div>
+                <div class="uk-card uk-card-body uk-margin-large-bottom">
+                    <h3>Investment Performance</h3>
+                    <p>Investment performance data will go here.</p>
+                </div>
+                <div class="uk-card uk-card-body uk-margin-large-bottom">
+                    <h3>Client Goal Performance</h3>
+                    <p>Client goal performance data will go here.</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer class="uk-section uk-section-muted">
+    <div class="uk-container">
+        <p>Footer content goes here.</p>
+    </div>
+</footer>
+</body>
+</html>

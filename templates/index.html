@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:hx-on="http://www.w3.org/1999/xhtml">
+<head>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.15.10/css/uikit.min.css" rel="stylesheet">
+    <link href='https://fonts.googleapis.com' rel="stylesheet">
+    <link href='https://fonts.gstatic.com' rel="stylesheet">
+    <link href='https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap'
+          rel="stylesheet">
+    <link href='https://oujdrprpkkwxeavzbaow.supabase.co/storage/v1/object/public/website_images/favicon.ico' rel='icon'
+          type='image/x-icon'>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.15.10/js/uikit.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.15.10/js/uikit-icons.min.js"></script>
+    <script src="https://unpkg.com/htmx.org@2.0.3"></script>
+    <script src="https://unpkg.com/htmx-ext-response-targets@2.0.0/response-targets.js"></script>
+    <title>Welcome to Blue Chip Investments</title>
+</head>
+<body>
+<div class="uk-grid-collapse uk-child-width-1-2@m" uk-grid="true">
+    <!-- Background image section -->
+    <div class="uk-background-cover uk-visible@m"
+         style="background-image: url('https://oujdrprpkkwxeavzbaow.supabase.co/storage/v1/object/public/website_images/marten-bjork-6dW3xyQvcYE-unsplash_6_11zon.webp'); filter: grayscale(90%);"
+         uk-height-viewport="true">
+    </div>
+
+    <!-- Main content section -->
+    <div class="uk-padding-large">
+        <!-- Logo -->
+        <img height="128"
+             src="https://oujdrprpkkwxeavzbaow.supabase.co/storage/v1/object/public/website_images/Blue%20Chip%20Invest%20Logo.001.png"
+             width="128">
+
+        <!-- Title -->
+        <div class="uk-heading-small uk-width-medium uk-margin-remove-top"
+             style="font-family: 'Noto Sans', sans-serif; font-optical-sizing: auto; font-weight: 400; font-style: normal;">
+            BLUE CHIP INVESTMENTS
+        </div>
+
+        <!-- Subtitle -->
+        <div class="uk-text-small uk-margin-large-bottom">
+            Building Your Legacy with Trusted Growth
+        </div>
+
+        <!-- Email Input Section -->
+        <div class="uk-margin" id="email_input_container">
+            <h3 class="uk-card-title uk-text-bolder uk-margin-remove-bottom">Welcome Back</h3>
+            <p class="uk-text-small uk-margin-remove-top" style="color: #091235;">
+                Please enter your <strong>email address</strong> to log in. A magic link will be sent to your email,
+                allowing you to securely access your account.
+            </p>
+            <div class="uk-text-small">Email</div>
+            <div class="uk-inline">
+                <span class="uk-form-icon" uk-icon="icon: mail"></span>
+                <input class="uk-input uk-form-width-large" name="login_email" type="email">
+            </div>
+            <p class="uk-text-meta">Please enter your email and click Send Code.</p>
+            <button class="uk-button uk-button-large uk-light" hx-include="[name='login_email']"
+                    hx-on:htmx:response-error="this.setAttribute('hx-target', '#send_code_notifications')"
+                    hx-post="/request_otp/" hx-swap="outerHTML"
+                    hx-target="#email_input_container"
+                    id="request-otp-btn" style="background-color: #091235;">
+                Send Code
+            </button>
+        </div>
+
+        <p id="send_code_notifications"></p>
+    </div>
+</div>
+</body>
+</html>
